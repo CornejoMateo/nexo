@@ -1,0 +1,552 @@
+import type { Product, Sale, InventoryMovement, ExchangeRate, User } from './types'
+
+export const mockExchangeRate: ExchangeRate = {
+  rate: 1150,
+  updatedAt: new Date('2024-01-15T10:30:00'),
+  updatedBy: 'Admin'
+}
+
+export const mockUsers: User[] = [
+  {
+    id: '1',
+    name: 'Carlos Admin',
+    email: 'carlos@applestore.com',
+    role: 'admin',
+    createdAt: new Date('2023-06-01')
+  },
+  {
+    id: '2',
+    name: 'Maria Empleada',
+    email: 'maria@applestore.com',
+    role: 'employee',
+    createdAt: new Date('2023-08-15')
+  }
+]
+
+export const mockProducts: Product[] = [
+  // iPhones
+  {
+    id: '1',
+    name: 'iPhone 15 Pro Max',
+    category: 'iphone',
+    brand: 'Apple',
+    condition: 'new',
+    storageCapacity: '256GB',
+    color: 'Natural Titanium',
+    serialNumber: 'DNQXH1234567',
+    imei: '353912110123456',
+    stockQuantity: 5,
+    purchasePriceUSD: 1050,
+    wholesalePriceUSD: 1150,
+    retailPriceUSD: 1299,
+    supplier: 'Apple Official',
+    notes: 'Latest model with A17 Pro chip',
+    images: [],
+    createdAt: new Date('2024-01-10'),
+    updatedAt: new Date('2024-01-10')
+  },
+  {
+    id: '2',
+    name: 'iPhone 15 Pro',
+    category: 'iphone',
+    brand: 'Apple',
+    condition: 'new',
+    storageCapacity: '128GB',
+    color: 'Blue Titanium',
+    serialNumber: 'DNQXH2345678',
+    imei: '353912110234567',
+    stockQuantity: 8,
+    purchasePriceUSD: 900,
+    wholesalePriceUSD: 980,
+    retailPriceUSD: 1099,
+    supplier: 'Apple Official',
+    images: [],
+    createdAt: new Date('2024-01-08'),
+    updatedAt: new Date('2024-01-08')
+  },
+  {
+    id: '3',
+    name: 'iPhone 15',
+    category: 'iphone',
+    brand: 'Apple',
+    condition: 'new',
+    storageCapacity: '128GB',
+    color: 'Pink',
+    serialNumber: 'DNQXH3456789',
+    imei: '353912110345678',
+    stockQuantity: 12,
+    purchasePriceUSD: 700,
+    wholesalePriceUSD: 780,
+    retailPriceUSD: 899,
+    supplier: 'Apple Official',
+    images: [],
+    createdAt: new Date('2024-01-05'),
+    updatedAt: new Date('2024-01-05')
+  },
+  // Used iPhones
+  {
+    id: '4',
+    name: 'iPhone 14 Pro Max',
+    category: 'used-iphone',
+    brand: 'Apple',
+    condition: 'used',
+    storageCapacity: '256GB',
+    color: 'Deep Purple',
+    serialNumber: 'DNQXH4567890',
+    imei: '353912110456789',
+    stockQuantity: 3,
+    purchasePriceUSD: 600,
+    wholesalePriceUSD: 700,
+    retailPriceUSD: 850,
+    supplier: 'Trade-in',
+    notes: 'Minor scratches on frame',
+    images: [],
+    createdAt: new Date('2024-01-12'),
+    updatedAt: new Date('2024-01-12'),
+    batteryHealth: 89,
+    cosmeticCondition: 'good',
+    repairNotes: 'Original screen, no repairs',
+    carrierStatus: 'unlocked',
+    accessoriesIncluded: ['Charger', 'Box']
+  },
+  {
+    id: '5',
+    name: 'iPhone 13 Pro',
+    category: 'used-iphone',
+    brand: 'Apple',
+    condition: 'used',
+    storageCapacity: '128GB',
+    color: 'Sierra Blue',
+    serialNumber: 'DNQXH5678901',
+    imei: '353912110567890',
+    stockQuantity: 2,
+    purchasePriceUSD: 400,
+    wholesalePriceUSD: 480,
+    retailPriceUSD: 599,
+    supplier: 'Trade-in',
+    images: [],
+    createdAt: new Date('2024-01-11'),
+    updatedAt: new Date('2024-01-11'),
+    batteryHealth: 85,
+    cosmeticCondition: 'excellent',
+    carrierStatus: 'unlocked',
+    accessoriesIncluded: ['Box']
+  },
+  // MacBooks
+  {
+    id: '6',
+    name: 'MacBook Pro 14"',
+    category: 'macbook',
+    brand: 'Apple',
+    condition: 'new',
+    storageCapacity: '512GB',
+    color: 'Space Black',
+    serialNumber: 'C02XH1234567',
+    stockQuantity: 4,
+    purchasePriceUSD: 1800,
+    wholesalePriceUSD: 1950,
+    retailPriceUSD: 2199,
+    supplier: 'Apple Official',
+    notes: 'M3 Pro chip, 18GB RAM',
+    images: [],
+    createdAt: new Date('2024-01-09'),
+    updatedAt: new Date('2024-01-09')
+  },
+  {
+    id: '7',
+    name: 'MacBook Air 15"',
+    category: 'macbook',
+    brand: 'Apple',
+    condition: 'new',
+    storageCapacity: '256GB',
+    color: 'Midnight',
+    serialNumber: 'C02XH2345678',
+    stockQuantity: 6,
+    purchasePriceUSD: 1100,
+    wholesalePriceUSD: 1200,
+    retailPriceUSD: 1399,
+    supplier: 'Apple Official',
+    notes: 'M3 chip, 8GB RAM',
+    images: [],
+    createdAt: new Date('2024-01-07'),
+    updatedAt: new Date('2024-01-07')
+  },
+  // iPads
+  {
+    id: '8',
+    name: 'iPad Pro 12.9"',
+    category: 'ipad',
+    brand: 'Apple',
+    condition: 'new',
+    storageCapacity: '256GB',
+    color: 'Space Gray',
+    serialNumber: 'DMPXH1234567',
+    stockQuantity: 3,
+    purchasePriceUSD: 950,
+    wholesalePriceUSD: 1050,
+    retailPriceUSD: 1199,
+    supplier: 'Apple Official',
+    notes: 'M2 chip, WiFi + Cellular',
+    images: [],
+    createdAt: new Date('2024-01-06'),
+    updatedAt: new Date('2024-01-06')
+  },
+  {
+    id: '9',
+    name: 'iPad Air',
+    category: 'ipad',
+    brand: 'Apple',
+    condition: 'new',
+    storageCapacity: '64GB',
+    color: 'Blue',
+    serialNumber: 'DMPXH2345678',
+    stockQuantity: 7,
+    purchasePriceUSD: 500,
+    wholesalePriceUSD: 560,
+    retailPriceUSD: 649,
+    supplier: 'Apple Official',
+    images: [],
+    createdAt: new Date('2024-01-04'),
+    updatedAt: new Date('2024-01-04')
+  },
+  // AirPods
+  {
+    id: '10',
+    name: 'AirPods Pro 2',
+    category: 'airpods',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'White',
+    serialNumber: 'H9XYZ1234567',
+    stockQuantity: 15,
+    purchasePriceUSD: 180,
+    wholesalePriceUSD: 210,
+    retailPriceUSD: 249,
+    supplier: 'Apple Official',
+    notes: 'USB-C charging case',
+    images: [],
+    createdAt: new Date('2024-01-03'),
+    updatedAt: new Date('2024-01-03')
+  },
+  {
+    id: '11',
+    name: 'AirPods Max',
+    category: 'airpods',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'Space Gray',
+    serialNumber: 'H9XYZ2345678',
+    stockQuantity: 2,
+    purchasePriceUSD: 420,
+    wholesalePriceUSD: 480,
+    retailPriceUSD: 549,
+    supplier: 'Apple Official',
+    images: [],
+    createdAt: new Date('2024-01-02'),
+    updatedAt: new Date('2024-01-02')
+  },
+  // Apple Watch
+  {
+    id: '12',
+    name: 'Apple Watch Ultra 2',
+    category: 'apple-watch',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'Titanium',
+    serialNumber: 'FL7YZ1234567',
+    stockQuantity: 4,
+    purchasePriceUSD: 650,
+    wholesalePriceUSD: 720,
+    retailPriceUSD: 799,
+    supplier: 'Apple Official',
+    notes: '49mm, GPS + Cellular',
+    images: [],
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01')
+  },
+  {
+    id: '13',
+    name: 'Apple Watch Series 9',
+    category: 'apple-watch',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'Midnight',
+    serialNumber: 'FL7YZ2345678',
+    stockQuantity: 8,
+    purchasePriceUSD: 350,
+    wholesalePriceUSD: 380,
+    retailPriceUSD: 429,
+    supplier: 'Apple Official',
+    notes: '45mm, GPS',
+    images: [],
+    createdAt: new Date('2023-12-28'),
+    updatedAt: new Date('2023-12-28')
+  },
+  // Accessories
+  {
+    id: '14',
+    name: 'MagSafe Charger',
+    category: 'chargers',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'White',
+    serialNumber: 'CHGMS1234567',
+    stockQuantity: 20,
+    purchasePriceUSD: 25,
+    wholesalePriceUSD: 32,
+    retailPriceUSD: 39,
+    supplier: 'Apple Official',
+    images: [],
+    createdAt: new Date('2023-12-25'),
+    updatedAt: new Date('2023-12-25')
+  },
+  {
+    id: '15',
+    name: 'USB-C to Lightning Cable',
+    category: 'cables',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'White',
+    serialNumber: 'CBLLTN1234567',
+    stockQuantity: 1,
+    purchasePriceUSD: 12,
+    wholesalePriceUSD: 16,
+    retailPriceUSD: 19,
+    supplier: 'Apple Official',
+    notes: '1m length',
+    images: [],
+    createdAt: new Date('2023-12-20'),
+    updatedAt: new Date('2023-12-20')
+  },
+  {
+    id: '16',
+    name: 'Apple Pencil Pro',
+    category: 'accessories',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'White',
+    serialNumber: 'PENCL1234567',
+    stockQuantity: 6,
+    purchasePriceUSD: 95,
+    wholesalePriceUSD: 110,
+    retailPriceUSD: 129,
+    supplier: 'Apple Official',
+    images: [],
+    createdAt: new Date('2023-12-18'),
+    updatedAt: new Date('2023-12-18')
+  },
+  {
+    id: '17',
+    name: 'Magic Keyboard for iPad Pro',
+    category: 'accessories',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'Black',
+    serialNumber: 'KYBRD1234567',
+    stockQuantity: 3,
+    purchasePriceUSD: 250,
+    wholesalePriceUSD: 290,
+    retailPriceUSD: 349,
+    supplier: 'Apple Official',
+    notes: '12.9-inch',
+    images: [],
+    createdAt: new Date('2023-12-15'),
+    updatedAt: new Date('2023-12-15')
+  },
+  {
+    id: '18',
+    name: '20W USB-C Power Adapter',
+    category: 'chargers',
+    brand: 'Apple',
+    condition: 'new',
+    color: 'White',
+    serialNumber: 'PWR20W1234567',
+    stockQuantity: 25,
+    purchasePriceUSD: 12,
+    wholesalePriceUSD: 16,
+    retailPriceUSD: 19,
+    supplier: 'Apple Official',
+    images: [],
+    createdAt: new Date('2023-12-10'),
+    updatedAt: new Date('2023-12-10')
+  }
+]
+
+export const mockSales: Sale[] = [
+  {
+    id: '1',
+    products: [
+      {
+        productId: '1',
+        productName: 'iPhone 15 Pro Max',
+        quantity: 1,
+        priceUSD: 1299,
+        priceARS: 1493850
+      }
+    ],
+    customerName: 'Juan Perez',
+    customerPhone: '+54 11 1234-5678',
+    paymentMethod: 'card',
+    priceType: 'retail',
+    totalUSD: 1299,
+    totalARS: 1493850,
+    exchangeRateUsed: 1150,
+    createdAt: new Date('2024-01-15T14:30:00'),
+    createdBy: 'Carlos Admin'
+  },
+  {
+    id: '2',
+    products: [
+      {
+        productId: '10',
+        productName: 'AirPods Pro 2',
+        quantity: 2,
+        priceUSD: 210,
+        priceARS: 241500
+      },
+      {
+        productId: '14',
+        productName: 'MagSafe Charger',
+        quantity: 1,
+        priceUSD: 32,
+        priceARS: 36800
+      }
+    ],
+    customerName: 'Tech Wholesale SA',
+    paymentMethod: 'transfer',
+    priceType: 'wholesale',
+    totalUSD: 452,
+    totalARS: 519800,
+    exchangeRateUsed: 1150,
+    createdAt: new Date('2024-01-15T11:00:00'),
+    createdBy: 'Maria Empleada'
+  },
+  {
+    id: '3',
+    products: [
+      {
+        productId: '6',
+        productName: 'MacBook Pro 14"',
+        quantity: 1,
+        priceUSD: 2199,
+        priceARS: 2528850
+      }
+    ],
+    customerName: 'Ana Garcia',
+    customerEmail: 'ana@email.com',
+    paymentMethod: 'mercadopago',
+    priceType: 'retail',
+    totalUSD: 2199,
+    totalARS: 2528850,
+    exchangeRateUsed: 1150,
+    createdAt: new Date('2024-01-14T16:45:00'),
+    createdBy: 'Carlos Admin'
+  },
+  {
+    id: '4',
+    products: [
+      {
+        productId: '4',
+        productName: 'iPhone 14 Pro Max',
+        quantity: 1,
+        priceUSD: 850,
+        priceARS: 977500
+      }
+    ],
+    customerName: 'Roberto Martinez',
+    paymentMethod: 'cash',
+    priceType: 'retail',
+    totalUSD: 850,
+    totalARS: 977500,
+    exchangeRateUsed: 1150,
+    createdAt: new Date('2024-01-14T10:20:00'),
+    createdBy: 'Maria Empleada'
+  },
+  {
+    id: '5',
+    products: [
+      {
+        productId: '12',
+        productName: 'Apple Watch Ultra 2',
+        quantity: 3,
+        priceUSD: 720,
+        priceARS: 828000
+      }
+    ],
+    customerName: 'Distribuidora Norte',
+    paymentMethod: 'transfer',
+    priceType: 'wholesale',
+    totalUSD: 2160,
+    totalARS: 2484000,
+    exchangeRateUsed: 1150,
+    createdAt: new Date('2024-01-13T09:15:00'),
+    createdBy: 'Carlos Admin'
+  }
+]
+
+export const mockInventoryMovements: InventoryMovement[] = [
+  {
+    id: '1',
+    productId: '1',
+    productName: 'iPhone 15 Pro Max',
+    type: 'in',
+    quantity: 10,
+    reason: 'Initial stock',
+    createdAt: new Date('2024-01-10'),
+    createdBy: 'Carlos Admin'
+  },
+  {
+    id: '2',
+    productId: '1',
+    productName: 'iPhone 15 Pro Max',
+    type: 'out',
+    quantity: 5,
+    reason: 'Sale #1',
+    createdAt: new Date('2024-01-15'),
+    createdBy: 'Carlos Admin'
+  },
+  {
+    id: '3',
+    productId: '10',
+    productName: 'AirPods Pro 2',
+    type: 'in',
+    quantity: 20,
+    reason: 'Restocking',
+    createdAt: new Date('2024-01-12'),
+    createdBy: 'Maria Empleada'
+  },
+  {
+    id: '4',
+    productId: '15',
+    productName: 'USB-C to Lightning Cable',
+    type: 'adjustment',
+    quantity: -5,
+    reason: 'Inventory correction',
+    createdAt: new Date('2024-01-11'),
+    createdBy: 'Carlos Admin'
+  }
+]
+
+export const categoryLabels: Record<string, string> = {
+  'iphone': 'iPhone',
+  'used-iphone': 'iPhone Usado',
+  'macbook': 'MacBook',
+  'ipad': 'iPad',
+  'airpods': 'AirPods',
+  'apple-watch': 'Apple Watch',
+  'accessories': 'Accesorios',
+  'chargers': 'Cargadores',
+  'cables': 'Cables'
+}
+
+export const categoryIcons: Record<string, string> = {
+  'iphone': 'smartphone',
+  'used-iphone': 'smartphone',
+  'macbook': 'laptop',
+  'ipad': 'tablet',
+  'airpods': 'headphones',
+  'apple-watch': 'watch',
+  'accessories': 'mouse',
+  'chargers': 'battery-charging',
+  'cables': 'cable'
+}
