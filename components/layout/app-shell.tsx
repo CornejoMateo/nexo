@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import type { ReactNode } from "react"
-import { useEffect } from "react"
-import { useStore } from "@/lib/store"
-import { Sidebar } from "./sidebar"
-import { BottomNav } from "./bottom-nav"
-import { cn } from "@/lib/utils"
+import type { ReactNode } from "react";
+import { useEffect } from "react";
+import { useStore } from "@/lib/store";
+import { Sidebar } from "./sidebar";
+import { BottomNav } from "./bottom-nav";
+import { cn } from "@/lib/utils";
 
 interface AppShellProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const { isDarkMode, sidebarOpen } = useStore()
+  const { isDarkMode, sidebarOpen } = useStore();
 
   useEffect(() => {
     if (isDarkMode) {
-      document.documentElement.classList.add("dark")
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove("dark")
+      document.documentElement.classList.remove("dark");
     }
-  }, [isDarkMode])
+  }, [isDarkMode]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,7 +33,7 @@ export function AppShell({ children }: AppShellProps) {
       <main
         className={cn(
           "min-h-screen pb-20 transition-all duration-300 md:pb-0",
-          sidebarOpen ? "md:pl-64" : "md:pl-16"
+          sidebarOpen ? "md:pl-64" : "md:pl-16",
         )}
       >
         <div className="mx-auto max-w-7xl p-4 md:p-6 lg:p-8">{children}</div>
@@ -42,5 +42,5 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile Bottom Navigation */}
       <BottomNav />
     </div>
-  )
+  );
 }
