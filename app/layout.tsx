@@ -27,10 +27,10 @@ export default function RootLayout({
 		<html lang="es" suppressHydrationWarning className="h-full">
 			<head>
 				<link rel="manifest" href="/manifest.json" />
-				<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-doce8.png" />
-				<link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-doce8.png" />
-				<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-doce8.png" />
-				<meta name="theme-color" content="#4F5C4D" />
+				<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-nexo.png" />
+				<link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-nexo.png" />
+				<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-nexo.png" />
+				<meta name="theme-color" content="#171717" />
 				<meta name="mobile-web-app-capable" content="yes" />
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

@@ -64,7 +64,7 @@ export function generateBudgetsPDF(rows: BudgetReportRow[], filtersDescription?:
 			cellPadding: 3,
 		},
 		headStyles: {
-			fillColor: [79, 92, 77], // DOCE OCHO brand color
+			fillColor: [23, 23, 23], // Nexo brand color
 			textColor: [255, 255, 255],
 			fontStyle: 'bold',
 		},

@@ -41,7 +41,7 @@ export function EventTypesDialog({
 	refresh,
 }: EventTypesDialogProps) {
 	const [name, setName] = useState('');
-	const [color, setColor] = useState('#7D8573');
+	const [color, setColor] = useState('#6b7280');
 	const [isSaving, setIsSaving] = useState(false);
 	const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -56,7 +56,7 @@ export function EventTypesDialog({
 
 	const resetForm = () => {
 		setName('');
-		setColor('#7D8573');
+		setColor('#6b7280');
 		setEditingId(null);
 	};
 
@@ -116,7 +116,7 @@ export function EventTypesDialog({
 	const handleEdit = (eventType: EventType) => {
 		setEditingId(eventType.id);
 		setName(eventType.name || '');
-		setColor(eventType.color || '#6E5341');
+		setColor(eventType.color || '#525252');
 	};
 
 	const handleDelete = async () => {
@@ -221,7 +221,7 @@ export function EventTypesDialog({
 										<div
 											className="h-4 w-4 rounded-full"
 											style={{
-												backgroundColor: type.color || '#6E5341',
+												backgroundColor: type.color || '#525252',
 											}}
 										/>
 

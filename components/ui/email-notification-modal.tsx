@@ -156,7 +156,7 @@ Por favor, asegúrese de que el lugar esté accesible y preparado para la instal
 Si tiene alguna pregunta o necesita coordinar algún detalle adicional, no dude en contactarnos.
 
 Atentamente,
-El equipo de Doceocho`;
+El equipo de Nexo`;
 
 			setFormData((prev) => ({
 				...prev,
@@ -192,7 +192,7 @@ Por favor, asegúrese de que el lugar esté accesible y preparado para la instal
 Si tiene alguna pregunta o necesita coordinar algún detalle adicional, no dude en contactarnos.
 
 Atentamente,
-El equipo de Doceocho`;
+El equipo de Nexo`;
 	};
 
 	const handleInputChange = (field: string, value: string) => {

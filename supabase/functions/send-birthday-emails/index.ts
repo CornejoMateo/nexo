@@ -53,13 +53,13 @@ serve(async (req) => {
   // Send email for each event
   for (const event of events) {
     const eventHtml = `
-      <div style="border-left: 4px solid #194236 ; padding: 16px; margin: 16px 0; background-color: #ebebeb; border-radius: 0 8px 8px 0;">
-        ${event.type ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #194236;\">Tipo:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.type}</span></div>` : ''}
-        ${event.title ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #194236;\">Título:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.title}</span></div>` : ''}
-        ${event.client ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #194236;\">Cliente:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.client}</span></div>` : ''}
-        ${event.location ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #194236;\">Localidad:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.location}</span></div>` : ''}
-        ${event.address ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #194236;\">Dirección:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.address}</span></div>` : ''}
-        ${event.description ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #194236;\">Dirección:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.description}</span></div>` : ''}
+      <div style="border-left: 4px solid #171717 ; padding: 16px; margin: 16px 0; background-color: #ebebeb; border-radius: 0 8px 8px 0;">
+        ${event.type ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #171717;\">Tipo:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.type}</span></div>` : ''}
+        ${event.title ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #171717;\">Título:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.title}</span></div>` : ''}
+        ${event.client ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #171717;\">Cliente:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.client}</span></div>` : ''}
+        ${event.location ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #171717;\">Localidad:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.location}</span></div>` : ''}
+        ${event.address ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #171717;\">Dirección:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.address}</span></div>` : ''}
+        ${event.description ? `<div style=\"margin-bottom: 8px;\"><span style=\"font-size: 18px; font-weight: bold; color: #171717;\">Dirección:</span> <span style=\"font-size: 16px; font-weight: normal; color: #222;\">${event.description}</span></div>` : ''}
       </div>
     `
 
@@ -73,7 +73,7 @@ serve(async (req) => {
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; padding: 20px; margin: 0;">
         <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <div style="background: linear-gradient(135deg, #194236 0%, #32553a 100%); padding: 30px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #171717 0%, #404040 100%); padding: 30px; text-align: center;">
             <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">
               Recordatorio
             </h1>
@@ -88,7 +88,7 @@ serve(async (req) => {
           </div>
           <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="color: #64748b; font-size: 12px; margin: 0;">
-              Dlay - Doceocho <br />
+              Dlay - Nexo <br />
               <span style="color:#94a3b8;">
                 Este mensaje fue generado automáticamente. Podés responder este email si necesitás reprogramar.
               </span>
@@ -109,7 +109,7 @@ serve(async (req) => {
           "Authorization": `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          from: "Doceocho <onboarding@resend.dev>",
+          from: "Nexo <onboarding@resend.dev>",
           to: emailTo,
           subject: `Recordatorio: ${event.title || ''}`,
           text: textContent,

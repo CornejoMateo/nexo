@@ -42,19 +42,12 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
 import type { UserRole } from '@/constants/users/user-role';
 import { UsersDialog } from '@/components/business/users/users-dialog';
-import { toast } from '@/components/ui/use-toast';
 
 const navigation = [
 	{ name: 'Panel', href: '/', icon: LayoutDashboard, disabled: false },
-	{ name: 'Insumos', href: '/supplies', icon: Package, disabled: false },
+	{ name: 'Stock', href: '/stock', icon: Package, disabled: false },
 	{ name: 'Clientes', href: '/clients', icon: Users, disabled: false },
-	{ name: 'Obras', href: '/works', icon: ClipboardCheck, disabled: false },
-	{ name: 'Kanban', href: '/kanban', icon: LayoutList, disabled: false },
-	{ name: 'Calendario', href: '/calendar', icon: Calendar, disabled: false },
-	{ name: 'Ajustes y Diario', href: '/claims', icon: AlertCircle, disabled: false },
-	{ name: 'Reportes de Presupuestos', href: '/budgets', icon: FileText, disabled: false },
-	{ name: 'Reportes', href: '/reports', icon: BarChart3, disabled: false },
-	{ name: 'Flujo de Fondos', href: '/cash-flow', icon: DollarSign, disabled: false },
+	{ name: 'Productos', href: '/products', icon: Package, disabled: false },
 ] as const;
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -68,24 +61,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: [
-				'Panel',
-				'Insumos',
-				'Clientes',
-				'Kanban',
-				'Calendario',
-				'Flujo de Fondos',
-				'Obras',
-				'Reportes',
-			],
-			Taller: ['Insumos', 'Clientes', 'Kanban', 'Calendario', 'Obras'],
+			Admin: ['Panel', 'Stock', 'Clientes', 'Productos'],
 		} as Record<UserRole, string[]>;
 	}, []);
 
 	const homeRouteByRole = useMemo(() => {
 		return {
 			Admin: '/',
-			Taller: '/supplies',
 		} as Record<UserRole, string>;
 	}, []);
 
@@ -159,13 +141,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 					<div className="flex h-16 items-center justify-between border-b border-border px-6">
 						<div className="flex items-center gap-2">
 							<Image
-								src="/logo-doce8.png"
+								src="/icons/icon-nexo.png"
 								alt="Logo"
 								width={60}
 								height={60}
 								style={{ height: 'auto' }}
 							/>
-							<span className="font-semibold text-foreground">Doce ocho</span>
+							<span className="font-semibold text-foreground">Nexo</span>
 						</div>
 						<Button
 							variant="ghost"

@@ -48,7 +48,7 @@ describe('LoginPage', () => {
 	it('renders the login form with all elements', () => {
 		render(<LoginPage />);
 
-		expect(screen.getByText('Doce ocho')).toBeInTheDocument();
+		expect(screen.getByText('Nexo')).toBeInTheDocument();
 		expect(screen.getByText('Iniciar sesión')).toBeInTheDocument();
 		expect(screen.getByPlaceholderText('Usuario')).toBeInTheDocument();
 		expect(screen.getByPlaceholderText('Contraseña')).toBeInTheDocument();

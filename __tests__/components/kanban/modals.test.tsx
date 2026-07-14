@@ -35,7 +35,7 @@ describe('BoardCreationModal', () => {
 		expect(onCreate).toHaveBeenCalledWith({
 			name: 'New Board',
 			description: undefined,
-			color: '#4F5C4D',
+			color: '#171717',
 		});
 	});
 

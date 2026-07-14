@@ -74,7 +74,7 @@ export async function createBoard(
 	const { data, error } = await supabase.rpc('create_board_with_member', {
 		p_name: board.name,
 		p_description: board.description ?? null,
-		p_color: board.color ?? '#4F5C4D',
+		p_color: board.color ?? '#171717',
 	});
 
 	return { data, error };

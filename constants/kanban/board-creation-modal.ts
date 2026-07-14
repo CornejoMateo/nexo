@@ -1,5 +1,5 @@
 export const BOARD_COLORS = [
-	'#4F5C4D', // Default green
+	'#171717', // Default black
 	'#3B82F6', // Blue
 	'#EF4444', // Red
 	'#F59E0B', // Orange
