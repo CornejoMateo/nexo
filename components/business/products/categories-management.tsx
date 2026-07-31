@@ -2,23 +2,45 @@
 
 import { useEffect, useState } from 'react';
 import { Category } from '@/lib/products/categories/categories';
-import { createCategory, listCategories } from '@/lib/products/categories/categories';
+import {
+	createCategory,
+	deleteCategory,
+	listCategories,
+	updateCategory,
+} from '@/lib/products/categories/categories';
 import { translateError } from '@/lib/error-translator';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export function CategoriesManagement() {
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [loading, setLoading] = useState(true);
+
 	const [isFormOpen, setIsFormOpen] = useState(false);
+	const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 	const [name, setName] = useState('');
 	const [saving, setSaving] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [formError, setFormError] = useState<string | null>(null);
+
+	const [deletingId, setDeletingId] = useState<number | null>(null);
+	const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+	const [listError, setListError] = useState<string | null>(null);
 
 	async function fetchCategories() {
 		setLoading(true);
 		const { data, error } = await listCategories();
 		if (error) {
-			setError('No se pudo cargar el listado de categorías.');
+			setListError('No se pudo cargar el listado de categorías.');
 		} else {
+			setListError(null);
 			setCategories(data ?? []);
 		}
 		setLoading(false);
@@ -28,67 +50,152 @@ export function CategoriesManagement() {
 		fetchCategories();
 	}, []);
 
-	function openForm() {
+	function openCreateForm() {
+		setEditingCategory(null);
 		setName('');
-		setError(null);
+		setFormError(null);
+		setIsFormOpen(true);
+	}
+
+	function openEditForm(category: Category) {
+		setEditingCategory(category);
+		setName(category.name ?? '');
+		setFormError(null);
 		setIsFormOpen(true);
 	}
 
 	function closeForm() {
 		if (saving) return;
 		setIsFormOpen(false);
+		setEditingCategory(null);
 	}
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		const trimmedName = name.trim();
 		if (!trimmedName) {
-			setError('El nombre es obligatorio.');
+			setFormError('El nombre es obligatorio.');
 			return;
 		}
 
 		setSaving(true);
-		setError(null);
-		const { data, error } = await createCategory({ name: trimmedName });
-		setSaving(false);
+		setFormError(null);
+
+		if (editingCategory) {
+			const { data, error } = await updateCategory(editingCategory.id, { name: trimmedName });
+			setSaving(false);
+
+			if (error) {
+				setFormError(
+					translateError(error) || 'No se pudo actualizar la categoría. Intentá de nuevo.'
+				);
+				return;
+			}
+
+			if (data) {
+				setCategories((prev) =>
+					prev
+						.map((c) => (c.id === data.id ? data : c))
+						.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+				);
+			}
+		} else {
+			const { data, error } = await createCategory({ name: trimmedName });
+			setSaving(false);
+
+			if (error) {
+				setFormError(translateError(error) || 'No se pudo crear la categoría. Intentá de nuevo.');
+				return;
+			}
+
+			if (data) {
+				setCategories((prev) =>
+					[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+				);
+			}
+		}
+
+		setIsFormOpen(false);
+		setEditingCategory(null);
+	}
+
+	function handleDelete(category: Category) {
+		setPendingDelete(category);
+	}
+
+	async function confirmDelete() {
+		if (!pendingDelete) return;
+
+		const category = pendingDelete;
+		setPendingDelete(null);
+		setDeletingId(category.id);
+		setListError(null);
+		const { error } = await deleteCategory(category.id);
+		setDeletingId(null);
 
 		if (error) {
-			setError('No se pudo crear la categoría. Intentá de nuevo.');
+			setListError(translateError(error) || 'No se pudo eliminar la categoría. Intentá de nuevo.');
 			return;
 		}
 
-		if (data) {
-			setCategories((prev) =>
-				[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-			);
-		}
-		setIsFormOpen(false);
+		setCategories((prev) => prev.filter((c) => c.id !== category.id));
 	}
 
 	return (
-		<div className="mx-auto max-w-xl p-6">
+		<div className="mx-auto max-w-2xl p-6">
 			<div className="mb-6 flex items-center justify-between">
 				<h1 className="text-xl font-semibold text-neutral-900">Categorías</h1>
 				<button
-					onClick={openForm}
+					onClick={openCreateForm}
 					className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
 				>
 					Nueva categoría
 				</button>
 			</div>
 
+			{listError && <p className="mb-4 text-sm text-red-600">{listError}</p>}
+
 			{loading ? (
-				<p className="text-sm text-neutral-500">Cargando marcas…</p>
+				<p className="text-sm text-neutral-500">Cargando categorías…</p>
 			) : categories.length === 0 ? (
-				<p className="text-sm text-neutral-500">Todavía no hay marcas cargadas.</p>
+				<p className="text-sm text-neutral-500">Todavía no hay categorías cargadas.</p>
 			) : (
-				<ul className="divide-y divide-neutral-200 rounded-md border border-neutral-200">
-					{categories.map((category) => (
-						<li key={category.id} className="px-4 py-3 text-sm text-neutral-800">
-							{category.name}
-						</li>
-					))}
-				</ul>
+				<div className="overflow-hidden rounded-md border border-neutral-200">
+					<table className="w-full text-left text-sm">
+						<thead className="bg-neutral-50 text-neutral-500">
+							<tr className="divide-x divide-neutral-200">
+								<th className="px-4 py-3 font-medium">Nombre</th>
+								<th className="w-40 px-4 py-3 font-medium text-center">Acciones</th>
+							</tr>
+						</thead>
+						<tbody className="divide-y divide-neutral-200">
+							{categories.map((category) => (
+								<tr key={category.id} className="divide-x divide-neutral-200">
+									<td className="px-4 py-3 text-neutral-800">{category.name}</td>
+									<td className="px-4 py-3 text-center justify-center items-center">
+										<div className="flex gap-3">
+											<button
+												onClick={() => openEditForm(category)}
+												disabled={deletingId === category.id}
+												className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
+											>
+												Editar
+											</button>
+
+											<button
+												onClick={() => handleDelete(category)}
+												disabled={deletingId === category.id}
+												className="rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
+											>
+												{deletingId === category.id ? 'Eliminando…' : 'Eliminar'}
+											</button>
+										</div>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
 			)}
 
 			{isFormOpen && (
@@ -100,13 +207,15 @@ export function CategoriesManagement() {
 						className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg"
 						onClick={(e) => e.stopPropagation()}
 					>
-						<h2 className="mb-4 text-base font-semibold text-neutral-900">Nueva categoría</h2>
+						<h2 className="mb-4 text-base font-semibold text-neutral-900">
+							{editingCategory ? 'Editar categoría' : 'Nueva categoría'}
+						</h2>
 						<form onSubmit={handleSubmit}>
-							<label htmlFor="brand-name" className="mb-1 block text-sm text-neutral-700">
+							<label htmlFor="category-name" className="mb-1 block text-sm text-neutral-700">
 								Nombre
 							</label>
 							<input
-								id="brand-name"
+								id="category-name"
 								type="text"
 								value={name}
 								onChange={(e) => setName(e.target.value)}
@@ -114,11 +223,7 @@ export function CategoriesManagement() {
 								className="mb-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
 								placeholder="Ej: Relojes"
 							/>
-							{error && (
-								<p className="mb-2 text-sm text-red-600">
-									{translateError(error) || 'No se pudo crear la categoría. Intentá de nuevo.'}
-								</p>
-							)}
+							{formError && <p className="mb-2 text-sm text-red-600">{formError}</p>}
 							<div className="mt-4 flex justify-end gap-2">
 								<button
 									type="button"
@@ -140,6 +245,27 @@ export function CategoriesManagement() {
 					</div>
 				</div>
 			)}
+			<AlertDialog open={!!pendingDelete} onOpenChange={() => setPendingDelete(null)}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>¿Eliminar categoría?</AlertDialogTitle>
+						<AlertDialogDescription>
+							¿Seguro que querés eliminar la categoría &quot;{pendingDelete?.name}&quot;? Esta
+							acción no se puede deshacer.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={confirmDelete}
+							disabled={deletingId !== null}
+							className="bg-red-600 hover:bg-red-700"
+						>
+							Eliminar
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }
