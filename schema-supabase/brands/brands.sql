@@ -4,3 +4,62 @@ create table public.brands (
   constraint brands_pkey primary key (id),
   constraint brands_name_key unique (name)
 ) TABLESPACE pg_default;
+
+CREATE POLICY "brands delete"
+ON public.brands
+FOR DELETE
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+);
+
+CREATE POLICY "brands insert"
+ON public.brands
+FOR INSERT
+TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+);
+
+CREATE POLICY "brands select"
+ON public.brands
+FOR SELECT
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+);
+
+CREATE POLICY "brands update"
+ON public.brands
+FOR UPDATE
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+) WITH CHECK (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+);
