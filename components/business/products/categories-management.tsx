@@ -9,6 +9,7 @@ import {
 	updateCategory,
 } from '@/lib/products/categories/categories';
 import { translateError } from '@/lib/error-translator';
+import { InfoBanner } from '@/components/ui/infoBanner';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -245,6 +246,29 @@ export function CategoriesManagement() {
 					</div>
 				</div>
 			)}
+			<div className="mt-6">
+				<InfoBanner
+					collapsible
+					title="Categorías"
+					sections={[
+						{
+							title: 'Utilidad',
+							children:
+								'En esta sección podés crear, editar y eliminar categorías de productos. Las categorías se usan para organizar los productos en la tienda.',
+						},
+						{
+							title: 'Cómo usarlo',
+							children:
+								'Usá "Nueva categoría" para crear una, y "Editar" para cambiar su nombre. Los nombres se muestran ordenados alfabéticamente.',
+						},
+						{
+							title: 'Eliminar',
+							children:
+								'La eliminación es permanente y no se puede deshacer. Verificá que la categoría no esté en uso antes de eliminarla.',
+						},
+					]}
+				/>
+			</div>
 			<AlertDialog open={!!pendingDelete} onOpenChange={() => setPendingDelete(null)}>
 				<AlertDialogContent>
 					<AlertDialogHeader>

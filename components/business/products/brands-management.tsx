@@ -9,6 +9,7 @@ import {
 	updateBrand,
 } from '@/lib/products/brands/brands';
 import { translateError } from '@/lib/error-translator';
+import { InfoBanner } from '@/components/ui/infoBanner';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -242,6 +243,29 @@ export function BrandsManagement() {
 					</div>
 				</div>
 			)}
+			<div className="mt-6">
+				<InfoBanner
+					collapsible
+					title="Marcas"
+					sections={[
+						{
+							title: 'Utilidad',
+							children: 'En esta sección podés crear, editar y eliminar marcas de productos.',
+						},
+						{
+							title: 'Cómo usarlo',
+							children:
+								'Usá "Nueva marca" para crear una, y "Editar" para cambiar su nombre. Los nombres se muestran ordenados alfabéticamente.',
+						},
+						{
+							title: 'Eliminar',
+							children:
+								'La eliminación es permanente y no se puede deshacer. Verificá que la marca no esté en uso antes de eliminarla.',
+						},
+					]}
+				/>
+			</div>
+
 			<AlertDialog open={!!pendingDelete} onOpenChange={() => setPendingDelete(null)}>
 				<AlertDialogContent>
 					<AlertDialogHeader>

@@ -4,6 +4,9 @@ import { useId, useState, type ReactNode } from 'react';
 import { sections, ProductSection } from '@/constants/products/products';
 import { BrandsManagement } from '@/components/business/products/brands-management';
 import { CategoriesManagement } from '@/components/business/products/categories-management';
+import { Products } from '@/components/business/products/products';
+import { StockManagement } from '@/components/business/products/stock-management';
+import { ImagesProductsManagement } from '@/components/business/products/images-products-management';
 
 type ProductsManagementProps = {
 	stock?: ReactNode;
@@ -26,9 +29,9 @@ export function ProductsManagement({
 	const tabListId = useId();
 
 	const panelContent: Record<ProductSection, ReactNode> = {
-		stock,
-		products,
-		gallery,
+		stock: stock ?? <StockManagement />,
+		products: products ?? <Products />,
+		gallery: gallery ?? <ImagesProductsManagement />,
 		categories: categories ?? <CategoriesManagement />,
 		brands: brands ?? <BrandsManagement />,
 	};
