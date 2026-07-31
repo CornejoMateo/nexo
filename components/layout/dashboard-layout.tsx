@@ -46,6 +46,7 @@ import { UsersDialog } from '@/components/business/users/users-dialog';
 const navigation = [
 	{ name: 'Panel', href: '/', icon: LayoutDashboard, disabled: false },
 	{ name: 'Productos', href: '/products', icon: Package, disabled: false },
+	{ name: 'Ventas', href: '/sales', icon: DollarSign, disabled: false },
 ] as const;
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -59,7 +60,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Panel', 'Productos'],
+			Admin: ['Panel', 'Productos', 'Ventas'],
 		} as Record<UserRole, string[]>;
 	}, []);
 
