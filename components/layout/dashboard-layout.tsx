@@ -112,7 +112,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	}, [loading, user, pathname, router, getHomeRoute, isRouteAllowed]);
 
 	if (loading || !user) {
-		return <div className="flex min-h-screen items-center justify-center">Iniciando sesión...</div>;
+		return <div className="flex min-h-screen items-center justify-center">Cargando...</div>;
 	}
 
 	if (!user.role) {

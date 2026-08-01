@@ -88,6 +88,7 @@ export function InfoBanner({
 								type="button"
 								onClick={() => setOpen((prev) => !prev)}
 								aria-expanded={open}
+								aria-label={open ? 'Ocultar contenido' : 'Mostrar contenido'}
 								className={cn(
 									'rounded-md p-1 transition-transform',
 									style.title,

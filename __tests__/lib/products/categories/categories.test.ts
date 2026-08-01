@@ -159,7 +159,7 @@ describe('categories', () => {
 		it('should update a category', async () => {
 			const updated: Category = {
 				id: 1,
-				name: 'Electronics',
+				name: 'Watch',
 			};
 
 			const single = jest.fn().mockResolvedValue({

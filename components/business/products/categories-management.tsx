@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Category } from '@/lib/products/categories/categories';
 import {
 	createCategory,
 	deleteCategory,
 	listCategories,
 	updateCategory,
+	Category,
 } from '@/lib/products/categories/categories';
 import { translateError } from '@/lib/error-translator';
 import { InfoBanner } from '@/components/ui/infoBanner';
@@ -20,6 +20,13 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 
 export function CategoriesManagement() {
 	const [categories, setCategories] = useState<Category[]>([]);
@@ -154,8 +161,11 @@ export function CategoriesManagement() {
 				</button>
 			</div>
 
-			{listError && <p className="mb-4 text-sm text-red-600">{listError}</p>}
-
+			{listError && (
+				<p role="alert" aria-live="polite" className="mb-4 text-sm text-red-600">
+					{listError}
+				</p>
+			)}
 			{loading ? (
 				<p className="text-sm text-neutral-500">Cargando categorías…</p>
 			) : categories.length === 0 ? (
@@ -174,7 +184,7 @@ export function CategoriesManagement() {
 								<tr key={category.id} className="divide-x divide-neutral-200">
 									<td className="px-4 py-3 text-neutral-800">{category.name}</td>
 									<td className="px-4 py-3 text-center justify-center items-center">
-										<div className="flex gap-3">
+										<div className="flex gap-3 justify-center">
 											<button
 												onClick={() => openEditForm(category)}
 												disabled={deletingId === category.id}
@@ -199,53 +209,45 @@ export function CategoriesManagement() {
 				</div>
 			)}
 
-			{isFormOpen && (
-				<div
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-					onClick={closeForm}
-				>
-					<div
-						className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg"
-						onClick={(e) => e.stopPropagation()}
-					>
-						<h2 className="mb-4 text-base font-semibold text-neutral-900">
-							{editingCategory ? 'Editar categoría' : 'Nueva categoría'}
-						</h2>
-						<form onSubmit={handleSubmit}>
-							<label htmlFor="category-name" className="mb-1 block text-sm text-neutral-700">
-								Nombre
-							</label>
-							<input
-								id="category-name"
-								type="text"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								autoFocus
-								className="mb-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
-								placeholder="Ej: Relojes"
-							/>
-							{formError && <p className="mb-2 text-sm text-red-600">{formError}</p>}
-							<div className="mt-4 flex justify-end gap-2">
-								<button
-									type="button"
-									onClick={closeForm}
-									disabled={saving}
-									className="rounded-md px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
-								>
-									Cancelar
-								</button>
-								<button
-									type="submit"
-									disabled={saving}
-									className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
-								>
-									{saving ? 'Guardando…' : 'Guardar'}
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			)}
+			<Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
+				<DialogContent className="max-w-sm">
+					<DialogHeader>
+						<DialogTitle>{editingCategory ? 'Editar categoría' : 'Nueva categoría'}</DialogTitle>
+					</DialogHeader>
+					<form onSubmit={handleSubmit}>
+						<label htmlFor="category-name" className="mb-1 block text-sm text-neutral-700">
+							Nombre
+						</label>
+						<input
+							id="category-name"
+							type="text"
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							autoFocus
+							className="mb-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
+							placeholder="Ej: Relojes"
+						/>
+						{formError && <p className="mb-2 text-sm text-red-600">{formError}</p>}
+						<DialogFooter className="mt-4 gap-2">
+							<button
+								type="button"
+								onClick={closeForm}
+								disabled={saving}
+								className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
+							>
+								Cancelar
+							</button>
+							<button
+								type="submit"
+								disabled={saving}
+								className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+							>
+								{saving ? 'Guardando…' : 'Guardar'}
+							</button>
+						</DialogFooter>
+					</form>
+				</DialogContent>
+			</Dialog>
 			<div className="mt-6">
 				<InfoBanner
 					collapsible

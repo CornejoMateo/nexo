@@ -20,6 +20,13 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 
 export function BrandsManagement() {
 	const [brands, setBrands] = useState<Brand[]>([]);
@@ -36,19 +43,23 @@ export function BrandsManagement() {
 	const [listError, setListError] = useState<string | null>(null);
 
 	async function fetchBrands() {
-		setLoading(true);
-		const { data, error } = await listBrands();
-		if (error) {
+		try {
+			const { data, error } = await listBrands();
+			if (error) {
+				setListError('No se pudo cargar el listado de marcas.');
+			} else {
+				setListError(null);
+				setBrands(data ?? []);
+			}
+		} catch {
 			setListError('No se pudo cargar el listado de marcas.');
-		} else {
-			setListError(null);
-			setBrands(data ?? []);
+		} finally {
+			setLoading(false);
 		}
-		setLoading(false);
 	}
 
 	useEffect(() => {
-		fetchBrands();
+		void fetchBrands();
 	}, []);
 
 	function openCreateForm() {
@@ -82,36 +93,40 @@ export function BrandsManagement() {
 		setSaving(true);
 		setFormError(null);
 
-		if (editingBrand) {
-			const { data, error } = await updateBrand(editingBrand.id, { name: trimmedName });
+		try {
+			if (editingBrand) {
+				const { data, error } = await updateBrand(editingBrand.id, { name: trimmedName });
+				if (error) {
+					setFormError(
+						translateError(error) || 'No se pudo actualizar la marca. Intentá de nuevo.'
+					);
+					return;
+				}
+				if (data) {
+					setBrands((prev) =>
+						prev
+							.map((b) => (b.id === data.id ? data : b))
+							.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+					);
+				}
+			} else {
+				const { data, error } = await createBrand({ name: trimmedName });
+				if (error) {
+					setFormError(translateError(error) || 'No se pudo crear la marca. Intentá de nuevo.');
+					return;
+				}
+				if (data) {
+					setBrands((prev) =>
+						[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+					);
+				}
+			}
+			setIsFormOpen(false);
+			setEditingBrand(null);
+		} catch {
+			setFormError('No se pudo guardar la marca. Intentá de nuevo.');
+		} finally {
 			setSaving(false);
-
-			if (error) {
-				setFormError(translateError(error) || 'No se pudo actualizar la marca. Intentá de nuevo.');
-				return;
-			}
-
-			if (data) {
-				setBrands((prev) =>
-					prev
-						.map((b) => (b.id === data.id ? data : b))
-						.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-				);
-			}
-		} else {
-			const { data, error } = await createBrand({ name: trimmedName });
-			setSaving(false);
-
-			if (error) {
-				setFormError(translateError(error) || 'No se pudo crear la marca. Intentá de nuevo.');
-				return;
-			}
-
-			if (data) {
-				setBrands((prev) =>
-					[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-				);
-			}
 		}
 
 		setIsFormOpen(false);
@@ -152,8 +167,11 @@ export function BrandsManagement() {
 				</button>
 			</div>
 
-			{listError && <p className="mb-4 text-sm text-red-600">{listError}</p>}
-
+			{listError && (
+				<p role="alert" aria-live="polite" className="mb-4 text-sm text-red-600">
+					{listError}
+				</p>
+			)}
 			{loading ? (
 				<p className="text-sm text-neutral-500">Cargando marcas…</p>
 			) : brands.length === 0 ? (
@@ -196,53 +214,45 @@ export function BrandsManagement() {
 				</div>
 			)}
 
-			{isFormOpen && (
-				<div
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-					onClick={closeForm}
-				>
-					<div
-						className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg"
-						onClick={(e) => e.stopPropagation()}
-					>
-						<h2 className="mb-4 text-base font-semibold text-neutral-900">
-							{editingBrand ? 'Editar marca' : 'Nueva marca'}
-						</h2>
-						<form onSubmit={handleSubmit}>
-							<label htmlFor="brand-name" className="mb-1 block text-sm text-neutral-700">
-								Nombre
-							</label>
-							<input
-								id="brand-name"
-								type="text"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								autoFocus
-								className="mb-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
-								placeholder="Ej: Apple"
-							/>
-							{formError && <p className="mb-2 text-sm text-red-600">{formError}</p>}
-							<div className="mt-4 flex justify-end gap-2">
-								<button
-									type="button"
-									onClick={closeForm}
-									disabled={saving}
-									className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
-								>
-									Cancelar
-								</button>
-								<button
-									type="submit"
-									disabled={saving}
-									className="rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
-								>
-									{saving ? 'Guardando…' : 'Guardar'}
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			)}
+			<Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
+				<DialogContent className="max-w-sm">
+					<DialogHeader>
+						<DialogTitle>{editingBrand ? 'Editar marca' : 'Nueva marca'}</DialogTitle>
+					</DialogHeader>
+					<form onSubmit={handleSubmit}>
+						<label htmlFor="brand-name" className="mb-1 block text-sm text-neutral-700">
+							Nombre
+						</label>
+						<input
+							id="brand-name"
+							type="text"
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							autoFocus
+							className="mb-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
+							placeholder="Ej: Apple"
+						/>
+						{formError && <p className="mb-2 text-sm text-red-600">{formError}</p>}
+						<DialogFooter className="mt-4 gap-2">
+							<button
+								type="button"
+								onClick={closeForm}
+								disabled={saving}
+								className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
+							>
+								Cancelar
+							</button>
+							<button
+								type="submit"
+								disabled={saving}
+								className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50"
+							>
+								{saving ? 'Guardando…' : 'Guardar'}
+							</button>
+						</DialogFooter>
+					</form>
+				</DialogContent>
+			</Dialog>
 			<div className="mt-6">
 				<InfoBanner
 					collapsible
