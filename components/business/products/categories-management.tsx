@@ -43,15 +43,19 @@ export function CategoriesManagement() {
 	const [listError, setListError] = useState<string | null>(null);
 
 	async function fetchCategories() {
-		setLoading(true);
-		const { data, error } = await listCategories();
-		if (error) {
+		try {
+			const { data, error } = await listCategories();
+			if (error) {
+				setListError('No se pudo cargar el listado de categorías.');
+			} else {
+				setListError(null);
+				setCategories(data ?? []);
+			}
+		} catch {
 			setListError('No se pudo cargar el listado de categorías.');
-		} else {
-			setListError(null);
-			setCategories(data ?? []);
+		} finally {
+			setLoading(false);
 		}
-		setLoading(false);
 	}
 
 	useEffect(() => {
@@ -89,42 +93,41 @@ export function CategoriesManagement() {
 		setSaving(true);
 		setFormError(null);
 
-		if (editingCategory) {
-			const { data, error } = await updateCategory(editingCategory.id, { name: trimmedName });
+		try {
+			if (editingCategory) {
+				const { data, error } = await updateCategory(editingCategory.id, { name: trimmedName });
+				if (error) {
+					setFormError(
+						translateError(error) || 'No se pudo actualizar la categoría. Intentá de nuevo.'
+					);
+					return;
+				}
+				if (data) {
+					setCategories((prev) =>
+						prev
+							.map((c) => (c.id === data.id ? data : c))
+							.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+					);
+				}
+			} else {
+				const { data, error } = await createCategory({ name: trimmedName });
+				if (error) {
+					setFormError(translateError(error) || 'No se pudo crear la categoría. Intentá de nuevo.');
+					return;
+				}
+				if (data) {
+					setCategories((prev) =>
+						[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+					);
+				}
+			}
+			setIsFormOpen(false);
+			setEditingCategory(null);
+		} catch {
+			setFormError('No se pudo guardar la categoría. Intentá de nuevo.');
+		} finally {
 			setSaving(false);
-
-			if (error) {
-				setFormError(
-					translateError(error) || 'No se pudo actualizar la categoría. Intentá de nuevo.'
-				);
-				return;
-			}
-
-			if (data) {
-				setCategories((prev) =>
-					prev
-						.map((c) => (c.id === data.id ? data : c))
-						.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-				);
-			}
-		} else {
-			const { data, error } = await createCategory({ name: trimmedName });
-			setSaving(false);
-
-			if (error) {
-				setFormError(translateError(error) || 'No se pudo crear la categoría. Intentá de nuevo.');
-				return;
-			}
-
-			if (data) {
-				setCategories((prev) =>
-					[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-				);
-			}
 		}
-
-		setIsFormOpen(false);
-		setEditingCategory(null);
 	}
 
 	function handleDelete(category: Category) {
@@ -138,15 +141,22 @@ export function CategoriesManagement() {
 		setPendingDelete(null);
 		setDeletingId(category.id);
 		setListError(null);
-		const { error } = await deleteCategory(category.id);
-		setDeletingId(null);
 
-		if (error) {
-			setListError(translateError(error) || 'No se pudo eliminar la categoría. Intentá de nuevo.');
-			return;
+		try {
+			const { error } = await deleteCategory(category.id);
+			if (error) {
+				setListError(
+					translateError(error) || 'No se pudo eliminar la categoría. Intentá de nuevo.'
+				);
+				return;
+			}
+
+			setCategories((prev) => prev.filter((c) => c.id !== category.id));
+		} catch {
+			setListError('No se pudo eliminar la categoría. Intentá de nuevo.');
+		} finally {
+			setDeletingId(null);
 		}
-
-		setCategories((prev) => prev.filter((c) => c.id !== category.id));
 	}
 
 	return (

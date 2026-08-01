@@ -26,6 +26,9 @@ export function ProductsManagement({
 	brands,
 }: ProductsManagementProps) {
 	const [activeSection, setActiveSection] = useState<ProductSection>(defaultSection);
+	const [visitedSections, setVisitedSections] = useState<Set<ProductSection>>(
+		() => new Set([defaultSection])
+	);
 	const tabListId = useId();
 
 	const panelContent: Record<ProductSection, ReactNode> = {
@@ -34,6 +37,16 @@ export function ProductsManagement({
 		gallery: gallery ?? <ImagesProductsManagement />,
 		categories: categories ?? <CategoriesManagement />,
 		brands: brands ?? <BrandsManagement />,
+	};
+
+	const handleSelectSection = (section: ProductSection) => {
+		setActiveSection(section);
+		setVisitedSections((prev) => {
+			if (prev.has(section)) return prev;
+			const next = new Set(prev);
+			next.add(section);
+			return next;
+		});
 	};
 
 	return (
@@ -58,7 +71,7 @@ export function ProductsManagement({
 							}`}
 							id={`${tabListId}-${section.id}-tab`}
 							key={section.id}
-							onClick={() => setActiveSection(section.id)}
+							onClick={() => handleSelectSection(section.id)}
 							role="tab"
 							type="button"
 						>
@@ -68,18 +81,20 @@ export function ProductsManagement({
 				})}
 			</div>
 
-			{sections.map((section) => (
-				<div
-					aria-labelledby={`${tabListId}-${section.id}-tab`}
-					hidden={section.id !== activeSection}
-					id={`${tabListId}-${section.id}-panel`}
-					key={section.id}
-					role="tabpanel"
-					tabIndex={0}
-				>
-					{panelContent[section.id]}
-				</div>
-			))}
+			{sections
+				.filter((section) => visitedSections.has(section.id))
+				.map((section) => (
+					<div
+						aria-labelledby={`${tabListId}-${section.id}-tab`}
+						hidden={section.id !== activeSection}
+						id={`${tabListId}-${section.id}-panel`}
+						key={section.id}
+						role="tabpanel"
+						tabIndex={0}
+					>
+						{panelContent[section.id]}
+					</div>
+				))}
 		</section>
 	);
 }

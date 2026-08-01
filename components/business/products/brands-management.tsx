@@ -128,9 +128,6 @@ export function BrandsManagement() {
 		} finally {
 			setSaving(false);
 		}
-
-		setIsFormOpen(false);
-		setEditingBrand(null);
 	}
 
 	function handleDelete(brand: Brand) {
@@ -144,15 +141,20 @@ export function BrandsManagement() {
 		setPendingDelete(null);
 		setDeletingId(brand.id);
 		setListError(null);
-		const { error } = await deleteBrand(brand.id);
-		setDeletingId(null);
 
-		if (error) {
-			setListError(translateError(error) || 'No se pudo eliminar la marca. Intentá de nuevo.');
-			return;
+		try {
+			const { error } = await deleteBrand(brand.id);
+			if (error) {
+				setListError(translateError(error) || 'No se pudo eliminar la marca. Intentá de nuevo.');
+				return;
+			}
+
+			setBrands((prev) => prev.filter((b) => b.id !== brand.id));
+		} catch {
+			setListError('No se pudo eliminar la marca. Intentá de nuevo.');
+		} finally {
+			setDeletingId(null);
 		}
-
-		setBrands((prev) => prev.filter((b) => b.id !== brand.id));
 	}
 
 	return (
