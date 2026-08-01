@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { uploadClientFile } from '@/lib/clients/files';
+//import { uploadClientFile } from '@/lib/clients/files';
 import { toast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
 import {
@@ -85,16 +85,16 @@ export function useFileUpload({
 		try {
 			const optimizedFile = await optimizeFile(selectedFile);
 
-			const { error } = await uploadClientFile(
+			/* 			const { error } = await uploadClientFile(
 				clientId,
 				optimizedFile,
 				displayName.trim() || null,
 				description.trim() || null,
 				checklistId || null,
 				claimId || null
-			);
+			); */
 
-			if (error) {
+			/* if (error) {
 				toast({
 					variant: 'destructive',
 					title: 'Error al subir archivo',
@@ -107,7 +107,7 @@ export function useFileUpload({
 				});
 				handleCloseUploadDialog();
 				onUploadSuccess?.();
-			}
+			} */
 		} catch (error) {
 			console.error('Error uploading file:', error);
 			toast({
