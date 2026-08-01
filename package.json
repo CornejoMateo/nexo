@@ -76,7 +76,7 @@
 		"react-hook-form": "^7.60.0",
 		"react-resizable-panels": "^2.1.7",
 		"recharts": "2.15.4",
-		"sharp": "^0.34.4",
+		"sharp": "^0.35.3",
 		"sonner": "^1.7.4",
 		"tailwind-merge": "^2.5.5",
 		"tailwindcss-animate": "^1.0.7",
@@ -118,6 +118,10 @@
 	},
 	"overrides": {
 		"micromatch": "4.0.8",
-		"yaml": "2.8.3"
+		"yaml": "2.8.3",
+		"next": {
+			"postcss": "8.5.23",
+			"sharp": "0.35.3"
+		}
 	}
 }
