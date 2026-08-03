@@ -4,3 +4,62 @@ create table public.categories (
   constraint categories_pkey primary key (id),
   constraint categories_name_key unique (name)
 ) TABLESPACE pg_default;
+
+CREATE POLICY "categories delete"
+ON public.categories
+FOR DELETE
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+);
+
+CREATE POLICY "categories insert"
+ON public.categories
+FOR INSERT
+TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+);
+
+CREATE POLICY "categories select"
+ON public.categories
+FOR SELECT
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+);
+
+CREATE POLICY "categories update"
+ON public.categories
+FOR UPDATE
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+) WITH CHECK (
+    EXISTS (
+        SELECT 1
+        FROM public.users u
+        WHERE u.uid_user = auth.uid()
+          AND u.role = 'Admin'
+    )
+);
