@@ -23,6 +23,7 @@ import {
 	Settings,
 	LayoutList,
 	Trash2,
+	Van,
 } from 'lucide-react';
 import { clearCache } from '@/utils/cache';
 
@@ -47,6 +48,7 @@ const navigation = [
 	{ name: 'Panel', href: '/', icon: LayoutDashboard, disabled: false },
 	{ name: 'Productos', href: '/products', icon: Package, disabled: false },
 	{ name: 'Ventas', href: '/sales', icon: DollarSign, disabled: false },
+	{ name: 'Proveedores', href: '/suppliers', icon: Van, disabled: false },
 ] as const;
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -60,7 +62,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Panel', 'Productos', 'Ventas'],
+			Admin: ['Panel', 'Productos', 'Ventas', 'Proveedores'],
 		} as Record<UserRole, string[]>;
 	}, []);
 
