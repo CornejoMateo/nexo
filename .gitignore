@@ -35,3 +35,6 @@ coverage/
 
 # History
 .history
+
+# Build
+next-env.d.ts
