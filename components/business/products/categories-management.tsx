@@ -44,7 +44,7 @@ export function CategoriesManagement() {
 	const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
 	const [listError, setListError] = useState<string | null>(null);
 
-	async function fetchCategories() {
+	const fetchCategories = async () => {
 		try {
 			const { data, error } = await listCategories();
 			if (error) {
@@ -58,33 +58,33 @@ export function CategoriesManagement() {
 		} finally {
 			setLoading(false);
 		}
-	}
+	};
 
 	useEffect(() => {
 		fetchCategories();
 	}, []);
 
-	function openCreateForm() {
+	const openCreateForm = () => {
 		setEditingCategory(null);
 		setName('');
 		setFormError(null);
 		setIsFormOpen(true);
-	}
+	};
 
-	function openEditForm(category: Category) {
+	const openEditForm = (category: Category) => {
 		setEditingCategory(category);
 		setName(category.name ?? '');
 		setFormError(null);
 		setIsFormOpen(true);
-	}
+	};
 
-	function closeForm() {
+	const closeForm = () => {
 		if (saving) return;
 		setIsFormOpen(false);
 		setEditingCategory(null);
-	}
+	};
 
-	async function handleSubmit(e: React.FormEvent) {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		const trimmedName = name.trim();
 		if (!trimmedName) {
@@ -130,13 +130,13 @@ export function CategoriesManagement() {
 		} finally {
 			setSaving(false);
 		}
-	}
+	};
 
-	function handleDelete(category: Category) {
+	const handleDelete = (category: Category) => {
 		setPendingDelete(category);
-	}
+	};
 
-	async function confirmDelete() {
+	const confirmDelete = async () => {
 		if (!pendingDelete) return;
 
 		const category = pendingDelete;
@@ -159,7 +159,7 @@ export function CategoriesManagement() {
 		} finally {
 			setDeletingId(null);
 		}
-	}
+	};
 
 	return (
 		<div className="mx-auto w-full p-6">

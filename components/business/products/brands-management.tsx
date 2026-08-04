@@ -44,7 +44,7 @@ export function BrandsManagement() {
 	const [pendingDelete, setPendingDelete] = useState<Brand | null>(null);
 	const [listError, setListError] = useState<string | null>(null);
 
-	async function fetchBrands() {
+	const fetchBrands = async () => {
 		try {
 			const { data, error } = await listBrands();
 			if (error) {
@@ -58,33 +58,33 @@ export function BrandsManagement() {
 		} finally {
 			setLoading(false);
 		}
-	}
+	};
 
 	useEffect(() => {
 		void fetchBrands();
 	}, []);
 
-	function openCreateForm() {
+	const openCreateForm = () => {
 		setEditingBrand(null);
 		setName('');
 		setFormError(null);
 		setIsFormOpen(true);
-	}
+	};
 
-	function openEditForm(brand: Brand) {
+	const openEditForm = (brand: Brand) => {
 		setEditingBrand(brand);
 		setName(brand.name ?? '');
 		setFormError(null);
 		setIsFormOpen(true);
-	}
+	};
 
-	function closeForm() {
+	const closeForm = () => {
 		if (saving) return;
 		setIsFormOpen(false);
 		setEditingBrand(null);
-	}
+	};
 
-	async function handleSubmit(e: React.FormEvent) {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		const trimmedName = name.trim();
 		if (!trimmedName) {
@@ -130,13 +130,13 @@ export function BrandsManagement() {
 		} finally {
 			setSaving(false);
 		}
-	}
+	};
 
-	function handleDelete(brand: Brand) {
+	const handleDelete = (brand: Brand) => {
 		setPendingDelete(brand);
-	}
+	};
 
-	async function confirmDelete() {
+	const confirmDelete = async () => {
 		if (!pendingDelete) return;
 
 		const brand = pendingDelete;
@@ -157,7 +157,7 @@ export function BrandsManagement() {
 		} finally {
 			setDeletingId(null);
 		}
-	}
+	};
 
 	return (
 		<div className="mx-auto w-full p-6">
