@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { DownloadExportButton } from '@/components/ui/download-export-button';
 import { columns } from '@/constants/products/brands';
+import { toast } from '@/components/ui/use-toast';
 
 export function BrandsManagement() {
 	const [brands, setBrands] = useState<Brand[]>([]);
@@ -99,10 +100,7 @@ export function BrandsManagement() {
 			if (editingBrand) {
 				const { data, error } = await updateBrand(editingBrand.id, { name: trimmedName });
 				if (error) {
-					setFormError(
-						translateError(error) || 'No se pudo actualizar la marca. Intentá de nuevo.'
-					);
-					return;
+					throw error;
 				}
 				if (data) {
 					setBrands((prev) =>
@@ -111,22 +109,33 @@ export function BrandsManagement() {
 							.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
 					);
 				}
+				toast({
+					title: 'Marca actualizada',
+					description: 'La marca se actualizó correctamente.',
+				});
 			} else {
 				const { data, error } = await createBrand({ name: trimmedName });
 				if (error) {
-					setFormError(translateError(error) || 'No se pudo crear la marca. Intentá de nuevo.');
-					return;
+					throw error;
 				}
 				if (data) {
 					setBrands((prev) =>
 						[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
 					);
 				}
+				toast({
+					title: 'Marca creada',
+					description: 'La marca se creó correctamente.',
+				});
 			}
 			setIsFormOpen(false);
 			setEditingBrand(null);
-		} catch {
-			setFormError('No se pudo guardar la marca. Intentá de nuevo.');
+		} catch (error: any) {
+			toast({
+				title: 'Error al guardar marca',
+				description: translateError(error) || 'No se pudo guardar la marca. Intentá de nuevo.',
+				variant: 'destructive',
+			});
 		} finally {
 			setSaving(false);
 		}
@@ -147,13 +156,20 @@ export function BrandsManagement() {
 		try {
 			const { error } = await deleteBrand(brand.id);
 			if (error) {
-				setListError(translateError(error) || 'No se pudo eliminar la marca. Intentá de nuevo.');
-				return;
+				throw error;
 			}
 
 			setBrands((prev) => prev.filter((b) => b.id !== brand.id));
-		} catch {
-			setListError('No se pudo eliminar la marca. Intentá de nuevo.');
+			toast({
+				title: 'Marca eliminada',
+				description: 'La marca se eliminó correctamente.',
+			});
+		} catch (error: any) {
+			toast({
+				title: 'Error al eliminar marca',
+				description: translateError(error) || 'No se pudo eliminar la marca. Intentá de nuevo.',
+				variant: 'destructive',
+			});
 		} finally {
 			setDeletingId(null);
 		}
@@ -292,6 +308,11 @@ export function BrandsManagement() {
 							title: 'Cómo usarlo',
 							children:
 								'Usá "Nueva marca" para crear una, y "Editar" para cambiar su nombre. Los nombres se muestran ordenados alfabéticamente.',
+						},
+						{
+							title: 'Descargas',
+							children:
+								'Podés exportar el listado de marcas en PDF o CSV usando los botones de descarga que aparecen debajo de la tabla.',
 						},
 						{
 							title: 'Eliminar',

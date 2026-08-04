@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { DownloadExportButton } from '@/components/ui/download-export-button';
 import { columns } from '@/constants/products/categories';
+import { toast } from '@/components/ui/use-toast';
 
 export function CategoriesManagement() {
 	const [categories, setCategories] = useState<Category[]>([]);
@@ -99,10 +100,7 @@ export function CategoriesManagement() {
 			if (editingCategory) {
 				const { data, error } = await updateCategory(editingCategory.id, { name: trimmedName });
 				if (error) {
-					setFormError(
-						translateError(error) || 'No se pudo actualizar la categoría. Intentá de nuevo.'
-					);
-					return;
+					throw error;
 				}
 				if (data) {
 					setCategories((prev) =>
@@ -111,22 +109,33 @@ export function CategoriesManagement() {
 							.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
 					);
 				}
+				toast({
+					title: 'Categoría actualizada',
+					description: 'La categoría se actualizó correctamente.',
+				});
 			} else {
 				const { data, error } = await createCategory({ name: trimmedName });
 				if (error) {
-					setFormError(translateError(error) || 'No se pudo crear la categoría. Intentá de nuevo.');
-					return;
+					throw error;
 				}
 				if (data) {
 					setCategories((prev) =>
 						[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
 					);
 				}
+				toast({
+					title: 'Categoría creada',
+					description: 'La categoría se creó correctamente.',
+				});
 			}
 			setIsFormOpen(false);
 			setEditingCategory(null);
-		} catch {
-			setFormError('No se pudo guardar la categoría. Intentá de nuevo.');
+		} catch (error: any) {
+			toast({
+				title: 'Error al guardar categoría',
+				description: translateError(error) || 'No se pudo guardar la categoría. Intentá de nuevo.',
+				variant: 'destructive',
+			});
 		} finally {
 			setSaving(false);
 		}
@@ -147,15 +156,26 @@ export function CategoriesManagement() {
 		try {
 			const { error } = await deleteCategory(category.id);
 			if (error) {
-				setListError(
-					translateError(error) || 'No se pudo eliminar la categoría. Intentá de nuevo.'
-				);
+				toast({
+					title: 'Error al eliminar categoría',
+					description:
+						translateError(error) || 'No se pudo eliminar la categoría. Intentá de nuevo.',
+					variant: 'destructive',
+				});
 				return;
 			}
 
 			setCategories((prev) => prev.filter((c) => c.id !== category.id));
+			toast({
+				title: 'Categoría eliminada',
+				description: 'La categoría se eliminó correctamente.',
+			});
 		} catch {
-			setListError('No se pudo eliminar la categoría. Intentá de nuevo.');
+			toast({
+				title: 'Error al eliminar categoría',
+				description: 'No se pudo eliminar la categoría. Intentá de nuevo.',
+				variant: 'destructive',
+			});
 		} finally {
 			setDeletingId(null);
 		}
@@ -296,6 +316,11 @@ export function CategoriesManagement() {
 							title: 'Cómo usarlo',
 							children:
 								'Usá "Nueva categoría" para crear una, y "Editar" para cambiar su nombre. Los nombres se muestran ordenados alfabéticamente.',
+						},
+						{
+							title: 'Descargas',
+							children:
+								'Podés exportar el listado de categorías en PDF o CSV usando los botones de descarga que aparecen debajo de la tabla.',
 						},
 						{
 							title: 'Eliminar',

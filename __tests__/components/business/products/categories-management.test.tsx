@@ -8,12 +8,21 @@ import {
 	deleteCategory,
 } from '@/lib/products/categories/categories';
 import { translateError } from '@/lib/error-translator';
+import { toast } from '@/components/ui/use-toast';
 
 jest.mock('@/lib/products/categories/categories');
 jest.mock('@/lib/error-translator');
 
+jest.mock('@/components/ui/use-toast', () => ({
+	toast: jest.fn(),
+}));
+
 jest.mock('@/components/ui/infoBanner', () => ({
 	InfoBanner: () => <div data-testid="info-banner" />,
+}));
+
+jest.mock('@/components/ui/download-export-button', () => ({
+	DownloadExportButton: () => <div data-testid="download-export-button" />,
 }));
 
 jest.mock('@/components/ui/dialog', () => ({
@@ -213,5 +222,9 @@ it('shows translated error when create fails', async () => {
 
 	await user.click(screen.getByText('Guardar'));
 
-	expect(await screen.findByText('Categoría duplicada')).toBeInTheDocument();
+	expect(toast).toHaveBeenCalledWith({
+		title: 'Error al guardar categoría',
+		description: 'Categoría duplicada',
+		variant: 'destructive',
+	});
 });
