@@ -1,14 +1,29 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrandsManagement } from '@/components/business/products/brands-management';
-import { listBrands, createBrand, updateBrand, deleteBrand } from '@/lib/products/brands/brands';
+import { createBrand, updateBrand, deleteBrand } from '@/lib/products/brands/brands';
 import { translateError } from '@/lib/error-translator';
+import { toast } from '@/components/ui/use-toast';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
+import { de } from 'date-fns/locale';
 
 jest.mock('@/lib/products/brands/brands');
 jest.mock('@/lib/error-translator');
 
+jest.mock('@/hooks/use-optimized-realtime', () => ({
+	useOptimizedRealtime: jest.fn(),
+}));
+
+jest.mock('@/components/ui/use-toast', () => ({
+	toast: jest.fn(),
+}));
+
 jest.mock('@/components/ui/infoBanner', () => ({
 	InfoBanner: () => <div data-testid="info-banner" />,
+}));
+
+jest.mock('@/components/ui/download-export-button', () => ({
+	DownloadExportButton: () => <div data-testid="download-export-button" />,
 }));
 
 jest.mock('@/components/ui/dialog', () => ({
@@ -30,183 +45,286 @@ jest.mock('@/components/ui/alert-dialog', () => ({
 	AlertDialogAction: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
 }));
 
-const mockedList = listBrands as jest.Mock;
 const mockedCreate = createBrand as jest.Mock;
 const mockedUpdate = updateBrand as jest.Mock;
 const mockedDelete = deleteBrand as jest.Mock;
 const mockedTranslate = translateError as jest.Mock;
+const mockedRealtime = useOptimizedRealtime as jest.Mock;
 
 beforeEach(() => {
 	jest.clearAllMocks();
 	mockedTranslate.mockReturnValue(null);
-});
 
-it('loads brands', async () => {
-	mockedList.mockResolvedValue({
-		data: [
-			{ id: 1, name: 'Apple' },
-			{ id: 2, name: 'Samsung' },
-		],
-		error: null,
-	});
-
-	render(<BrandsManagement />);
-
-	expect(await screen.findByText('Apple')).toBeInTheDocument();
-	expect(screen.getByText('Samsung')).toBeInTheDocument();
-});
-
-it('shows empty state', async () => {
-	mockedList.mockResolvedValue({
+	mockedRealtime.mockReturnValue({
 		data: [],
+		loading: false,
 		error: null,
+		refresh: jest.fn(),
 	});
-
-	render(<BrandsManagement />);
-
-	expect(await screen.findByText(/Todavía no hay marcas cargadas/i)).toBeInTheDocument();
 });
 
-it('shows list error', async () => {
-	mockedList.mockResolvedValue({
-		data: null,
-		error: {},
+describe('BrandsManagement', () => {
+	it('loads brands', async () => {
+		mockedRealtime.mockReturnValue({
+			data: [
+				{ id: 1, name: 'Apple' },
+				{ id: 2, name: 'Samsung' },
+			],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		render(<BrandsManagement />);
+
+		expect(await screen.findByText('Apple')).toBeInTheDocument();
+		expect(screen.getByText('Samsung')).toBeInTheDocument();
 	});
 
-	render(<BrandsManagement />);
+	it('shows empty state', async () => {
+		render(<BrandsManagement />);
 
-	expect(await screen.findByText(/No se pudo cargar el listado/)).toBeInTheDocument();
-});
-
-it('creates a brand', async () => {
-	const user = userEvent.setup();
-
-	mockedList.mockResolvedValue({
-		data: [],
-		error: null,
+		expect(await screen.findByText(/Todavía no hay marcas cargadas/i)).toBeInTheDocument();
 	});
 
-	mockedCreate.mockResolvedValue({
-		data: {
-			id: 10,
-			name: 'Sony',
-		},
-		error: null,
+	it('shows list error', async () => {
+		mockedRealtime.mockReturnValue({
+			data: [],
+			loading: false,
+			error: 'No se pudo cargar el listado de marcas.',
+			refresh: jest.fn(),
+		});
+
+		render(<BrandsManagement />);
+
+		expect(await screen.findByText(/No se pudo cargar el listado/)).toBeInTheDocument();
 	});
 
-	render(<BrandsManagement />);
+	it('creates a brand', async () => {
+		const user = userEvent.setup();
 
-	await screen.findByText(/Nueva marca/i);
+		mockedCreate.mockResolvedValue({
+			data: {
+				id: 10,
+				name: 'Sony',
+			},
+			error: null,
+		});
 
-	await user.click(screen.getByText(/Nueva marca/i));
+		render(<BrandsManagement />);
 
-	await user.type(screen.getByPlaceholderText(/Apple/i), 'Sony');
+		await screen.findByText(/Nueva marca/i);
 
-	await user.click(screen.getByText('Guardar'));
+		await user.click(screen.getByText(/Nueva marca/i));
 
-	await waitFor(() => {
-		expect(mockedCreate).toHaveBeenCalledWith({
-			name: 'Sony',
+		await user.type(screen.getByPlaceholderText(/Apple/i), 'Sony');
+
+		await user.click(screen.getByText('Guardar'));
+
+		await waitFor(() => {
+			expect(mockedCreate).toHaveBeenCalledWith({
+				name: 'Sony',
+			});
 		});
 	});
-});
 
-it('validates required name', async () => {
-	const user = userEvent.setup();
+	it('validates required name', async () => {
+		const user = userEvent.setup();
 
-	mockedList.mockResolvedValue({
-		data: [],
-		error: null,
+		render(<BrandsManagement />);
+
+		await user.click(screen.getByText(/Nueva marca/i));
+
+		await user.click(screen.getByText('Guardar'));
+
+		expect(await screen.findByText(/El nombre es obligatorio/)).toBeInTheDocument();
 	});
 
-	render(<BrandsManagement />);
+	it('updates a brand', async () => {
+		const user = userEvent.setup();
 
-	await user.click(screen.getByText(/Nueva marca/i));
+		mockedRealtime.mockReturnValue({
+			data: [{ id: 1, name: 'Apple' }],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
 
-	await user.click(screen.getByText('Guardar'));
+		mockedUpdate.mockResolvedValue({
+			data: { id: 1, name: 'Apple Inc.' },
+			error: null,
+		});
 
-	expect(await screen.findByText(/El nombre es obligatorio/)).toBeInTheDocument();
-});
+		render(<BrandsManagement />);
 
-it('updates a brand', async () => {
-	const user = userEvent.setup();
+		await screen.findByText('Apple');
 
-	mockedList.mockResolvedValue({
-		data: [{ id: 1, name: 'Apple' }],
-		error: null,
+		await user.click(screen.getByText('Editar'));
+
+		const input = screen.getByDisplayValue('Apple');
+
+		await user.clear(input);
+		await user.type(input, 'Apple Inc.');
+
+		await user.click(screen.getByText('Guardar'));
+
+		await waitFor(() =>
+			expect(mockedUpdate).toHaveBeenCalledWith(1, {
+				name: 'Apple Inc.',
+			})
+		);
 	});
 
-	mockedUpdate.mockResolvedValue({
-		data: { id: 1, name: 'Apple Inc.' },
-		error: null,
+	it('deletes a brand', async () => {
+		const user = userEvent.setup();
+
+		mockedRealtime.mockReturnValue({
+			data: [{ id: 1, name: 'Apple' }],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		mockedDelete.mockResolvedValue({
+			data: null,
+			error: null,
+		});
+
+		render(<BrandsManagement />);
+
+		await screen.findByText('Apple');
+
+		await user.click(screen.getAllByText('Eliminar')[0]);
+
+		await user.click(screen.getAllByText('Eliminar')[1]);
+
+		await waitFor(() => expect(mockedDelete).toHaveBeenCalledWith(1));
 	});
 
-	render(<BrandsManagement />);
+	it('shows translated error when create fails', async () => {
+		const user = userEvent.setup();
 
-	await screen.findByText('Apple');
+		mockedTranslate.mockReturnValue('Marca duplicada');
 
-	await user.click(screen.getByText('Editar'));
+		mockedCreate.mockResolvedValue({
+			data: null,
+			error: {},
+		});
 
-	const input = screen.getByDisplayValue('Apple');
+		render(<BrandsManagement />);
 
-	await user.clear(input);
-	await user.type(input, 'Apple Inc.');
+		await user.click(screen.getByText(/Nueva marca/i));
 
-	await user.click(screen.getByText('Guardar'));
+		await user.type(screen.getByPlaceholderText(/Apple/i), 'Sony');
 
-	await waitFor(() =>
-		expect(mockedUpdate).toHaveBeenCalledWith(1, {
-			name: 'Apple Inc.',
-		})
-	);
-});
+		await user.click(screen.getByText('Guardar'));
 
-it('deletes a brand', async () => {
-	const user = userEvent.setup();
+		expect(toast).toHaveBeenCalledWith({
+			title: 'Error al guardar marca',
+			description: 'Marca duplicada',
+			variant: 'destructive',
+		});
+	});
+	it('filters brands by search term', async () => {
+		const user = userEvent.setup();
 
-	mockedList.mockResolvedValue({
-		data: [{ id: 1, name: 'Apple' }],
-		error: null,
+		mockedRealtime.mockReturnValue({
+			data: [
+				{ id: 1, name: 'Apple' },
+				{ id: 2, name: 'Samsung' },
+				{ id: 3, name: 'Motorola' },
+			],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		render(<BrandsManagement />);
+
+		const input = screen.getByPlaceholderText(/Buscar por nombre/i);
+
+		await user.type(input, 'apple');
+
+		expect(screen.getByText('Apple')).toBeInTheDocument();
+		expect(screen.queryByText('Samsung')).not.toBeInTheDocument();
+		expect(screen.queryByText('Motorola')).not.toBeInTheDocument();
 	});
 
-	mockedDelete.mockResolvedValue({
-		data: null,
-		error: null,
+	it('shows loading spinner', () => {
+		mockedRealtime.mockReturnValue({
+			data: [],
+			loading: true,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		render(<BrandsManagement />);
+
+		expect(document.querySelector('.animate-spin')).toBeInTheDocument();
 	});
 
-	render(<BrandsManagement />);
+	it('shows only first page', async () => {
+		mockedRealtime.mockReturnValue({
+			data: Array.from({ length: 15 }, (_, i) => ({
+				id: i + 1,
+				name: `Marca ${i + 1}`,
+			})),
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
 
-	await screen.findByText('Apple');
+		render(<BrandsManagement />);
 
-	await user.click(screen.getAllByText('Eliminar')[0]);
-
-	await user.click(screen.getAllByText('Eliminar')[1]);
-
-	await waitFor(() => expect(mockedDelete).toHaveBeenCalledWith(1));
-});
-
-it('shows translated error when create fails', async () => {
-	const user = userEvent.setup();
-
-	mockedTranslate.mockReturnValue('Marca duplicada');
-
-	mockedList.mockResolvedValue({
-		data: [],
-		error: null,
+		expect(screen.getByText('Marca 1')).toBeInTheDocument();
+		expect(screen.getByText('Marca 10')).toBeInTheDocument();
+		expect(screen.queryByText('Marca 5')).not.toBeInTheDocument();
 	});
 
-	mockedCreate.mockResolvedValue({
-		data: null,
-		error: {},
+	it('changes page', async () => {
+		const user = userEvent.setup();
+
+		mockedRealtime.mockReturnValue({
+			data: Array.from({ length: 15 }, (_, i) => ({
+				id: i + 1,
+				name: `Marca ${i + 1}`,
+			})),
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		render(<BrandsManagement />);
+
+		await user.click(screen.getByText('2'));
+
+		expect(await screen.findByText('Marca 5')).toBeInTheDocument();
+		expect(screen.queryByText('Marca 1')).not.toBeInTheDocument();
 	});
 
-	render(<BrandsManagement />);
+	it('shows generic error when delete throws', async () => {
+		const user = userEvent.setup();
 
-	await user.click(screen.getByText(/Nueva marca/i));
+		mockedRealtime.mockReturnValue({
+			data: [{ id: 1, name: 'Apple' }],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
 
-	await user.type(screen.getByPlaceholderText(/Apple/i), 'Sony');
+		mockedDelete.mockRejectedValue(new Error());
 
-	await user.click(screen.getByText('Guardar'));
+		render(<BrandsManagement />);
 
-	expect(await screen.findByText('Marca duplicada')).toBeInTheDocument();
+		await user.click(screen.getAllByText('Eliminar')[0]);
+		await user.click(screen.getAllByText('Eliminar')[1]);
+
+		await waitFor(() =>
+			expect(toast).toHaveBeenCalledWith({
+				title: 'Error al eliminar marca',
+				description: 'No se pudo eliminar la marca. Intentá de nuevo.',
+				variant: 'destructive',
+			})
+		);
+	});
 });

@@ -20,9 +20,10 @@ export function WhatsAppLink({
 	iconClassName = 'h-3 w-3 mr-1 text-muted-foreground flex-shrink-0',
 	...props
 }: WhatsAppLinkProps) {
-	// Remove any non-numeric characters except + from the phone number
-	const cleanPhone = phone.replace(/[^\d+]/g, '');
-	const whatsappUrl = `https://wa.me/${cleanPhone}${message ? `?text=${encodeURIComponent(message)}` : ''}`;
+	const whatsappNumber = toWhatsAppNumber(phone);
+	const whatsappUrl = `https://wa.me/${whatsappNumber}${
+		message ? `?text=${encodeURIComponent(message)}` : ''
+	}`;
 
 	return (
 		<Link
@@ -40,3 +41,11 @@ export function WhatsAppLink({
 		</Link>
 	);
 }
+
+const toWhatsAppNumber = (phone: string): string => {
+	const digits = phone.replace(/\D/g, '');
+	if (!digits) return '';
+	if (digits.startsWith('54')) return digits;
+	const local = digits.replace(/^0+/, '').replace(/^15/, '');
+	return `549${local}`;
+};
