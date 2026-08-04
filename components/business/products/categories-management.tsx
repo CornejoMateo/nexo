@@ -27,6 +27,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog';
+import { DownloadExportButton } from '@/components/ui/download-export-button';
+import { columns } from '@/constants/products/categories';
 
 export function CategoriesManagement() {
 	const [categories, setCategories] = useState<Category[]>([]);
@@ -160,7 +162,7 @@ export function CategoriesManagement() {
 	}
 
 	return (
-		<div className="mx-auto max-w-2xl p-6">
+		<div className="mx-auto w-full p-6">
 			<div className="mb-6 flex items-center justify-between">
 				<h1 className="text-xl font-semibold text-neutral-900">Categorías</h1>
 				<button
@@ -181,7 +183,7 @@ export function CategoriesManagement() {
 			) : categories.length === 0 ? (
 				<p className="text-sm text-neutral-500">Todavía no hay categorías cargadas.</p>
 			) : (
-				<div className="overflow-hidden rounded-md border border-neutral-200">
+				<div className="overflow-hidden rounded-md border border-neutral-200 overflow-y-auto max-h-[400px]">
 					<table className="w-full text-left text-sm">
 						<thead className="bg-neutral-50 text-neutral-500">
 							<tr className="divide-x divide-neutral-200">
@@ -257,6 +259,28 @@ export function CategoriesManagement() {
 						</DialogFooter>
 					</form>
 				</DialogContent>
+				<div className="mt-4 flex justify-end gap-2">
+					<DownloadExportButton
+						data={categories}
+						columns={columns}
+						fileName="Categorias"
+						format="pdf"
+						title="Listado de categorías"
+						subtitle={`Total de categorías: ${categories.length}`}
+						orientation="portrait"
+						className="bg-red-400 hover:bg-red-700"
+						label="Descargar PDF"
+					/>
+					<DownloadExportButton
+						data={categories}
+						columns={columns}
+						fileName="Categorias"
+						format="csv"
+						title="Listado de categorías"
+						subtitle={`Total de categorías: ${categories.length}`}
+						className="bg-green-600 hover:bg-green-700"
+					/>
+				</div>
 			</Dialog>
 			<div className="mt-6">
 				<InfoBanner
