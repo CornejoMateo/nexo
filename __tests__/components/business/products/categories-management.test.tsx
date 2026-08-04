@@ -66,164 +66,269 @@ beforeEach(() => {
 	});
 });
 
-it('loads categories', async () => {
-	mockedRealtime.mockReturnValue({
-		data: [
-			{ id: 1, name: 'Watch' },
-			{ id: 2, name: 'Electronics' },
-		],
-		loading: false,
-		error: null,
-		refresh: jest.fn(),
+describe('CategoriesManagement', () => {
+	it('loads categories', async () => {
+		mockedRealtime.mockReturnValue({
+			data: [
+				{ id: 1, name: 'Watch' },
+				{ id: 2, name: 'Electronics' },
+			],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		render(<CategoriesManagement />);
+
+		expect(await screen.findByText('Watch')).toBeInTheDocument();
+		expect(screen.getByText('Electronics')).toBeInTheDocument();
 	});
 
-	render(<CategoriesManagement />);
+	it('shows empty state', async () => {
+		render(<CategoriesManagement />);
 
-	expect(await screen.findByText('Watch')).toBeInTheDocument();
-	expect(screen.getByText('Electronics')).toBeInTheDocument();
-});
-
-it('shows empty state', async () => {
-	render(<CategoriesManagement />);
-
-	expect(await screen.findByText(/Todavía no hay categorías cargadas/i)).toBeInTheDocument();
-});
-
-it('shows list error', async () => {
-	mockedRealtime.mockReturnValue({
-		data: [],
-		loading: false,
-		error: 'No se pudo cargar el listado de categorías.',
-		refresh: jest.fn(),
+		expect(await screen.findByText(/Todavía no hay categorías cargadas/i)).toBeInTheDocument();
 	});
 
-	render(<CategoriesManagement />);
+	it('shows list error', async () => {
+		mockedRealtime.mockReturnValue({
+			data: [],
+			loading: false,
+			error: 'No se pudo cargar el listado de categorías.',
+			refresh: jest.fn(),
+		});
 
-	expect(await screen.findByText(/No se pudo cargar el listado/)).toBeInTheDocument();
-});
+		render(<CategoriesManagement />);
 
-it('creates a category', async () => {
-	const user = userEvent.setup();
-
-	mockedCreate.mockResolvedValue({
-		data: {
-			id: 10,
-			name: 'Phones',
-		},
-		error: null,
+		expect(await screen.findByText(/No se pudo cargar el listado/)).toBeInTheDocument();
 	});
 
-	render(<CategoriesManagement />);
+	it('creates a category', async () => {
+		const user = userEvent.setup();
 
-	await screen.findByText(/Nueva categoría/i);
+		mockedCreate.mockResolvedValue({
+			data: {
+				id: 10,
+				name: 'Phones',
+			},
+			error: null,
+		});
 
-	await user.click(screen.getByText(/Nueva categoría/i));
+		render(<CategoriesManagement />);
 
-	await user.type(screen.getByPlaceholderText(/Ej: Relojes/i), 'Phones');
+		await screen.findByText(/Nueva categoría/i);
 
-	await user.click(screen.getByText('Guardar'));
+		await user.click(screen.getByText(/Nueva categoría/i));
 
-	await waitFor(() => {
-		expect(mockedCreate).toHaveBeenCalledWith({
-			name: 'Phones',
+		await user.type(screen.getByPlaceholderText(/Ej: Relojes/i), 'Phones');
+
+		await user.click(screen.getByText('Guardar'));
+
+		await waitFor(() => {
+			expect(mockedCreate).toHaveBeenCalledWith({
+				name: 'Phones',
+			});
 		});
 	});
-});
 
-it('validates required name', async () => {
-	const user = userEvent.setup();
+	it('validates required name', async () => {
+		const user = userEvent.setup();
 
-	render(<CategoriesManagement />);
+		render(<CategoriesManagement />);
 
-	await user.click(screen.getByText(/Nueva categoría/i));
+		await user.click(screen.getByText(/Nueva categoría/i));
 
-	await user.click(screen.getByText('Guardar'));
+		await user.click(screen.getByText('Guardar'));
 
-	expect(await screen.findByText(/El nombre es obligatorio/)).toBeInTheDocument();
-});
-
-it('updates a category', async () => {
-	const user = userEvent.setup();
-
-	mockedRealtime.mockReturnValue({
-		data: [{ id: 1, name: 'Watch' }],
-		loading: false,
-		error: null,
-		refresh: jest.fn(),
+		expect(await screen.findByText(/El nombre es obligatorio/)).toBeInTheDocument();
 	});
 
-	mockedUpdate.mockResolvedValue({
-		data: { id: 1, name: 'Watch Inc.' },
-		error: null,
+	it('updates a category', async () => {
+		const user = userEvent.setup();
+
+		mockedRealtime.mockReturnValue({
+			data: [{ id: 1, name: 'Watch' }],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		mockedUpdate.mockResolvedValue({
+			data: { id: 1, name: 'Watch Inc.' },
+			error: null,
+		});
+
+		render(<CategoriesManagement />);
+
+		await screen.findByText('Watch');
+
+		await user.click(screen.getByText('Editar'));
+
+		const input = screen.getByDisplayValue('Watch');
+
+		await user.clear(input);
+		await user.type(input, 'Watch Inc.');
+
+		await user.click(screen.getByText('Guardar'));
+
+		await waitFor(() =>
+			expect(mockedUpdate).toHaveBeenCalledWith(1, {
+				name: 'Watch Inc.',
+			})
+		);
 	});
 
-	render(<CategoriesManagement />);
+	it('deletes a category', async () => {
+		const user = userEvent.setup();
 
-	await screen.findByText('Watch');
+		mockedRealtime.mockReturnValue({
+			data: [{ id: 1, name: 'Watch' }],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
 
-	await user.click(screen.getByText('Editar'));
+		mockedDelete.mockResolvedValue({
+			data: null,
+			error: null,
+		});
 
-	const input = screen.getByDisplayValue('Watch');
+		render(<CategoriesManagement />);
 
-	await user.clear(input);
-	await user.type(input, 'Watch Inc.');
+		await screen.findByText('Watch');
 
-	await user.click(screen.getByText('Guardar'));
+		await user.click(screen.getAllByText('Eliminar')[0]);
 
-	await waitFor(() =>
-		expect(mockedUpdate).toHaveBeenCalledWith(1, {
-			name: 'Watch Inc.',
-		})
-	);
-});
+		await user.click(screen.getAllByText('Eliminar')[1]);
 
-it('deletes a category', async () => {
-	const user = userEvent.setup();
-
-	mockedRealtime.mockReturnValue({
-		data: [{ id: 1, name: 'Watch' }],
-		loading: false,
-		error: null,
-		refresh: jest.fn(),
+		await waitFor(() => expect(mockedDelete).toHaveBeenCalledWith(1));
 	});
 
-	mockedDelete.mockResolvedValue({
-		data: null,
-		error: null,
+	it('shows translated error when create fails', async () => {
+		const user = userEvent.setup();
+
+		mockedTranslate.mockReturnValue('Categoría duplicada');
+
+		mockedCreate.mockResolvedValue({
+			data: null,
+			error: {},
+		});
+
+		render(<CategoriesManagement />);
+
+		await user.click(screen.getByText(/Nueva categoría/i));
+
+		await user.type(screen.getByPlaceholderText(/Ej: Relojes/i), 'Phones');
+
+		await user.click(screen.getByText('Guardar'));
+
+		expect(toast).toHaveBeenCalledWith({
+			title: 'Error al guardar categoría',
+			description: 'Categoría duplicada',
+			variant: 'destructive',
+		});
 	});
 
-	render(<CategoriesManagement />);
+	it('filters categories by search term', async () => {
+		const user = userEvent.setup();
 
-	await screen.findByText('Watch');
+		mockedRealtime.mockReturnValue({
+			data: [
+				{ id: 1, name: 'Celulares' },
+				{ id: 2, name: 'Fundas' },
+				{ id: 3, name: 'Relojes' },
+			],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
 
-	await user.click(screen.getAllByText('Eliminar')[0]);
+		render(<CategoriesManagement />);
 
-	await user.click(screen.getAllByText('Eliminar')[1]);
+		const input = screen.getByPlaceholderText(/Buscar por nombre/i);
 
-	await waitFor(() => expect(mockedDelete).toHaveBeenCalledWith(1));
-});
+		await user.type(input, 'fund');
 
-it('shows translated error when create fails', async () => {
-	const user = userEvent.setup();
-
-	mockedTranslate.mockReturnValue('Categoría duplicada');
-
-	mockedCreate.mockResolvedValue({
-		data: null,
-		error: {},
+		expect(screen.getByText('Fundas')).toBeInTheDocument();
+		expect(screen.queryByText('Celulares')).not.toBeInTheDocument();
+		expect(screen.queryByText('Relojes')).not.toBeInTheDocument();
 	});
 
-	render(<CategoriesManagement />);
+	it('shows loading spinner', () => {
+		mockedRealtime.mockReturnValue({
+			data: [],
+			loading: true,
+			error: null,
+			refresh: jest.fn(),
+		});
 
-	await user.click(screen.getByText(/Nueva categoría/i));
+		render(<CategoriesManagement />);
 
-	await user.type(screen.getByPlaceholderText(/Ej: Relojes/i), 'Phones');
+		expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+	});
 
-	await user.click(screen.getByText('Guardar'));
+	it('shows only first page', async () => {
+		mockedRealtime.mockReturnValue({
+			data: Array.from({ length: 15 }, (_, i) => ({
+				id: i + 1,
+				name: `Categoria ${i + 1}`,
+			})),
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
 
-	expect(toast).toHaveBeenCalledWith({
-		title: 'Error al guardar categoría',
-		description: 'Categoría duplicada',
-		variant: 'destructive',
+		render(<CategoriesManagement />);
+
+		expect(screen.getByText('Categoria 1')).toBeInTheDocument();
+		expect(screen.getByText('Categoria 10')).toBeInTheDocument();
+		expect(screen.queryByText('Categoria 5')).not.toBeInTheDocument();
+	});
+
+	it('changes page', async () => {
+		const user = userEvent.setup();
+
+		mockedRealtime.mockReturnValue({
+			data: Array.from({ length: 15 }, (_, i) => ({
+				id: i + 1,
+				name: `Categoria ${i + 1}`,
+			})),
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		render(<CategoriesManagement />);
+
+		await user.click(screen.getByText('2'));
+
+		expect(await screen.findByText('Categoria 5')).toBeInTheDocument();
+		expect(screen.queryByText('Categoria 1')).not.toBeInTheDocument();
+	});
+
+	it('shows generic error when delete throws', async () => {
+		const user = userEvent.setup();
+
+		mockedRealtime.mockReturnValue({
+			data: [{ id: 1, name: 'Watch' }],
+			loading: false,
+			error: null,
+			refresh: jest.fn(),
+		});
+
+		mockedDelete.mockRejectedValue(new Error());
+
+		render(<CategoriesManagement />);
+
+		await user.click(screen.getAllByText('Eliminar')[0]);
+		await user.click(screen.getAllByText('Eliminar')[1]);
+
+		await waitFor(() =>
+			expect(toast).toHaveBeenCalledWith({
+				title: 'Error al eliminar categoría',
+				description: 'No se pudo eliminar la categoría. Intentá de nuevo.',
+				variant: 'destructive',
+			})
+		);
 	});
 });

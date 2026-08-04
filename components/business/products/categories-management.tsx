@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
 	createCategory,
 	deleteCategory,
@@ -31,8 +31,34 @@ import { DownloadExportButton } from '@/components/ui/download-export-button';
 import { columns } from '@/constants/products/categories';
 import { toast } from '@/components/ui/use-toast';
 import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
+import {
+	TableHead,
+	TableRow,
+	Table,
+	TableBody,
+	TableHeader,
+	TableCell,
+} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from '@/components/ui/pagination';
+
+const PAGE_SIZE = 10;
 
 export function CategoriesManagement() {
+	const fetchCategories = useCallback(async () => {
+		const { data, error } = await listCategories();
+		if (error) throw error;
+		return data ?? [];
+	}, []);
+
 	const {
 		data: categories,
 		loading,
@@ -41,9 +67,7 @@ export function CategoriesManagement() {
 	} = useOptimizedRealtime<Category>(
 		'categories',
 		async () => {
-			const { data, error } = await listCategories();
-			if (error) throw error;
-			return data ?? [];
+			return await fetchCategories();
 		},
 		'categories_cache'
 	);
@@ -56,6 +80,26 @@ export function CategoriesManagement() {
 
 	const [deletingId, setDeletingId] = useState<number | null>(null);
 	const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+
+	const [searchTerm, setSearchTerm] = useState('');
+	const [page, setPage] = useState(0);
+
+	const sortedCategories = [...categories].sort((a, b) =>
+		(a.name ?? '').localeCompare(b.name ?? '')
+	);
+	const normalizedSearch = searchTerm.trim().toLowerCase();
+	const filteredCategories = normalizedSearch
+		? sortedCategories.filter((category) =>
+				(category.name ?? '').toLowerCase().includes(normalizedSearch)
+			)
+		: sortedCategories;
+
+	const totalPages = Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE));
+	const currentPage = Math.min(page, totalPages - 1);
+	const paginatedCategories = filteredCategories.slice(
+		currentPage * PAGE_SIZE,
+		currentPage * PAGE_SIZE + PAGE_SIZE
+	);
 
 	const openCreateForm = () => {
 		setEditingCategory(null);
@@ -158,14 +202,50 @@ export function CategoriesManagement() {
 
 	return (
 		<div className="mx-auto w-full p-6">
-			<div className="mb-6 flex items-center justify-between">
-				<h1 className="text-xl font-semibold text-neutral-900">Categorías</h1>
-				<button
-					onClick={openCreateForm}
-					className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700"
-				>
-					Nueva categoría
-				</button>
+			<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<h1 className="text-2xl font-bold tracking-tight text-neutral-900">Categorías</h1>
+					<p className="mt-1 text-sm text-neutral-500">
+						Administrá el listado de categorías de productos.{' '}
+						{!loading && (
+							<span className="font-medium text-neutral-700">
+								({categories.length} {categories.length === 1 ? 'categoría' : 'categorías'})
+							</span>
+						)}
+					</p>
+				</div>
+				{!loading && (
+					<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+						<DownloadExportButton
+							data={categories}
+							columns={columns}
+							fileName="Categorías"
+							format="pdf"
+							title="Listado de categorías"
+							subtitle={`Total de categorías: ${categories.length}`}
+							orientation="portrait"
+							label="Descargar PDF"
+							className="w-full bg-red-800 hover:bg-red-700 sm:w-auto"
+						/>
+
+						<DownloadExportButton
+							data={categories}
+							columns={columns}
+							fileName="Categorías"
+							format="csv"
+							title="Listado de categorías"
+							subtitle={`Total de categorías: ${categories.length}`}
+							className="w-full bg-green-700 hover:bg-green-600 sm:w-auto"
+						/>
+
+						<button
+							onClick={openCreateForm}
+							className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700 sm:w-auto"
+						>
+							Nueva Categoría
+						</button>
+					</div>
+				)}
 			</div>
 
 			{error && (
@@ -180,43 +260,104 @@ export function CategoriesManagement() {
 			) : categories.length === 0 ? (
 				<p className="text-sm text-neutral-500">Todavía no hay categorías cargadas.</p>
 			) : (
-				<div className="overflow-hidden rounded-md border border-neutral-200 overflow-y-auto max-h-[400px]">
-					<table className="w-full text-left text-sm">
-						<thead className="bg-neutral-50 text-neutral-500">
-							<tr className="divide-x divide-neutral-200">
-								<th className="px-4 py-3 font-medium">Nombre</th>
-								<th className="w-40 px-4 py-3 font-medium text-center">Acciones</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-neutral-200">
-							{[...categories]
-								.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-								.map((category) => (
-									<tr key={category.id} className="divide-x divide-neutral-200">
-										<td className="px-4 py-3 text-neutral-800">{category.name}</td>
-										<td className="px-4 py-3 text-center justify-center items-center">
-											<div className="flex gap-3 justify-center">
+				<>
+					<div className="mb-4 relative">
+						<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+						<Input
+							type="text"
+							placeholder="Buscar por nombre..."
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+							aria-label="Buscar marcas"
+							className="w-full pl-10 sm:max-w-sm"
+						/>
+					</div>
+					<div className="overflow-x-auto rounded-lg border border-neutral-200">
+						<Table>
+							<TableHeader className="bg-slate-800">
+								<TableRow className="border-b-0 hover:bg-slate-800 bg-neutral-500">
+									<TableHead className="text-center font-semibold text-white">Nombre</TableHead>
+									<TableHead className="w-40 text-center font-semibold text-white">
+										Acciones
+									</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{paginatedCategories.map((category) => (
+									<TableRow key={category.id}>
+										<TableCell className="text-center font-medium">{category.name}</TableCell>
+
+										<TableCell>
+											<div className="flex items-center justify-center gap-2">
 												<button
 													onClick={() => openEditForm(category)}
 													disabled={deletingId === category.id}
-													className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
+													className="rounded-md bg-neutral-400 px-2 py-1 text-sm font-medium text-white transition-colors hover:bg-neutral-700 disabled:opacity-50"
 												>
 													Editar
 												</button>
-
 												<button
 													onClick={() => handleDelete(category)}
+													className="rounded-md bg-red-600 px-2 py-1 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
 													disabled={deletingId === category.id}
-													className="rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
 												>
-													{deletingId === category.id ? 'Eliminando…' : 'Eliminar'}
+													{deletingId === category.id ? 'Eliminando...' : 'Eliminar'}
 												</button>
 											</div>
-										</td>
-									</tr>
+										</TableCell>
+									</TableRow>
 								))}
-						</tbody>
-					</table>
+							</TableBody>
+						</Table>
+					</div>
+				</>
+			)}
+
+			{filteredCategories.length > 0 && (
+				<div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
+					<p className="text-sm text-neutral-500">
+						Mostrando {currentPage * PAGE_SIZE + 1}–
+						{Math.min((currentPage + 1) * PAGE_SIZE, filteredCategories.length)} de{' '}
+						{filteredCategories.length}
+					</p>
+					<Pagination className="!mx-0 !w-auto !ml-auto !justify-end">
+						<PaginationContent>
+							<PaginationItem>
+								<PaginationPrevious
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										setPage(Math.max(0, currentPage - 1));
+									}}
+									className={currentPage === 0 ? 'pointer-events-none opacity-50' : ''}
+								/>
+							</PaginationItem>
+							{Array.from({ length: totalPages }, (_, index) => (
+								<PaginationItem key={index}>
+									<PaginationLink
+										href="#"
+										onClick={(e) => {
+											e.preventDefault();
+											setPage(index);
+										}}
+										isActive={index === currentPage}
+									>
+										{index + 1}
+									</PaginationLink>
+								</PaginationItem>
+							))}
+							<PaginationItem>
+								<PaginationNext
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										setPage(Math.min(totalPages - 1, currentPage + 1));
+									}}
+									className={currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : ''}
+								/>
+							</PaginationItem>
+						</PaginationContent>
+					</Pagination>
 				</div>
 			)}
 
@@ -234,6 +375,8 @@ export function CategoriesManagement() {
 							type="text"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
+							aria-invalid={formError ? true : undefined}
+							aria-describedby={formError ? 'supplier-form-error' : undefined}
 							autoFocus
 							className="mb-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500"
 							placeholder="Ej: Relojes"
@@ -258,30 +401,6 @@ export function CategoriesManagement() {
 						</DialogFooter>
 					</form>
 				</DialogContent>
-				{!loading && (
-					<div className="mt-4 flex justify-end gap-2">
-						<DownloadExportButton
-							data={categories}
-							columns={columns}
-							fileName="Categorias"
-							format="pdf"
-							title="Listado de categorías"
-							subtitle={`Total de categorías: ${categories.length}`}
-							orientation="portrait"
-							className="bg-red-400 hover:bg-red-700"
-							label="Descargar PDF"
-						/>
-						<DownloadExportButton
-							data={categories}
-							columns={columns}
-							fileName="Categorias"
-							format="csv"
-							title="Listado de categorías"
-							subtitle={`Total de categorías: ${categories.length}`}
-							className="bg-green-600 hover:bg-green-700"
-						/>
-					</div>
-				)}
 			</Dialog>
 			<div className="mt-6">
 				<InfoBanner

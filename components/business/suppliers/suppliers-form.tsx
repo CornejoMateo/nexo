@@ -1,7 +1,6 @@
 'use client';
 
 import { DialogFooter } from '@/components/ui/dialog';
-import type { Supplier } from '@/lib/suppliers/suppliers';
 
 export type SupplierForm = {
 	name: string;
@@ -22,7 +21,6 @@ export const emptyForm: SupplierForm = {
 };
 
 interface SuppliersFormProps {
-	editingSupplier: Supplier | null;
 	form: SupplierForm;
 	onChange: (field: keyof SupplierForm, value: string) => void;
 	saving: boolean;
@@ -36,7 +34,6 @@ const fieldClass =
 const labelClass = 'mb-1 block text-sm text-neutral-700';
 
 export function SuppliersForm({
-	editingSupplier,
 	form,
 	onChange,
 	saving,
@@ -54,11 +51,12 @@ export function SuppliersForm({
 				type="text"
 				value={form.name}
 				onChange={(e) => onChange('name', e.target.value)}
+				aria-invalid={formError ? true : undefined}
+				aria-describedby={formError ? 'supplier-form-error' : undefined}
 				autoFocus
 				className={fieldClass}
 				placeholder="Ej: Fundas S.A."
 			/>
-
 			<label htmlFor="supplier-cuit" className={labelClass}>
 				CUIT
 			</label>
@@ -70,7 +68,6 @@ export function SuppliersForm({
 				className={fieldClass}
 				placeholder="Ej: 20-12345678-9"
 			/>
-
 			<label htmlFor="supplier-phone" className={labelClass}>
 				Teléfono
 			</label>
@@ -82,7 +79,6 @@ export function SuppliersForm({
 				className={fieldClass}
 				placeholder="Ej: 3586 123456"
 			/>
-
 			<label htmlFor="supplier-email" className={labelClass}>
 				Email
 			</label>
@@ -96,7 +92,6 @@ export function SuppliersForm({
 				className={fieldClass}
 				placeholder="Ej: ventas@fundas.com"
 			/>
-
 			<label htmlFor="supplier-address" className={labelClass}>
 				Dirección
 			</label>
@@ -108,7 +103,6 @@ export function SuppliersForm({
 				className={fieldClass}
 				placeholder="Ej: Av. San Martín 1234"
 			/>
-
 			<label htmlFor="supplier-notes" className={labelClass}>
 				Notas
 			</label>
@@ -120,8 +114,11 @@ export function SuppliersForm({
 				className={fieldClass}
 				placeholder="Ej: Entrega los lunes"
 			/>
-
-			{formError && <p className="mb-2 text-sm text-red-600">{formError}</p>}
+			{formError && (
+				<p id="supplier-form-error" role="alert" className="mb-2 text-sm text-red-600">
+					{formError}
+				</p>
+			)}{' '}
 			<DialogFooter className="mt-4 gap-2">
 				<button
 					type="button"

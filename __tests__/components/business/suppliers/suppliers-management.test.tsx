@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SuppliersManagement } from '@/components/business/suppliers/suppliers-management';
 import {
@@ -359,9 +359,10 @@ it('deletes a supplier', async () => {
 
 	await screen.findByText('Papelera Central');
 
-	await user.click(screen.getAllByText('Eliminar')[0]);
+	const row = screen.getByText('Papelera Central').closest('tr') as HTMLElement;
+	await user.click(within(row).getByRole('button', { name: 'Eliminar' }));
 
-	await user.click(screen.getAllByText('Eliminar')[1]);
+	await user.click(screen.getAllByRole('button', { name: 'Eliminar' })[1]);
 
 	await waitFor(() => expect(mockedDelete).toHaveBeenCalledWith(1));
 });

@@ -45,7 +45,6 @@ export function WhatsAppLink({
 const toWhatsAppNumber = (phone: string): string => {
 	const digits = phone.replace(/\D/g, '');
 	if (!digits) return '';
-	if (digits.startsWith('549')) return digits;
 	if (digits.startsWith('54')) return digits;
 	const local = digits.replace(/^0+/, '').replace(/^15/, '');
 	return `549${local}`;
