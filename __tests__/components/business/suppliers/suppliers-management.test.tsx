@@ -9,6 +9,7 @@ import {
 } from '@/lib/suppliers/suppliers';
 import { translateError } from '@/lib/error-translator';
 import { toast } from '@/components/ui/use-toast';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 jest.mock('@/lib/suppliers/suppliers');
 jest.mock('@/lib/error-translator');
@@ -43,11 +44,16 @@ jest.mock('@/components/ui/alert-dialog', () => ({
 	AlertDialogAction: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
 }));
 
+jest.mock('@/hooks/use-optimized-realtime', () => ({
+	useOptimizedRealtime: jest.fn(),
+}));
+
 const mockedList = listSuppliers as jest.Mock;
 const mockedCreate = createSupplier as jest.Mock;
 const mockedUpdate = updateSupplier as jest.Mock;
 const mockedDelete = deleteSupplier as jest.Mock;
 const mockedTranslate = translateError as jest.Mock;
+const mockedRealtime = useOptimizedRealtime as jest.Mock;
 
 const emptyPayload = {
 	cuit: null,
@@ -59,11 +65,19 @@ const emptyPayload = {
 
 beforeEach(() => {
 	jest.clearAllMocks();
+
 	mockedTranslate.mockReturnValue(null);
+
+	mockedRealtime.mockReturnValue({
+		data: [],
+		loading: false,
+		error: null,
+		refresh: jest.fn(),
+	});
 });
 
 it('loads suppliers', async () => {
-	mockedList.mockResolvedValue({
+	mockedRealtime.mockReturnValue({
 		data: [
 			{
 				id: 1,
@@ -88,7 +102,9 @@ it('loads suppliers', async () => {
 				updated_at: '2024-01-01T00:00:00Z',
 			},
 		],
+		loading: false,
 		error: null,
+		refresh: jest.fn(),
 	});
 
 	render(<SuppliersManagement />);
@@ -114,9 +130,11 @@ it('shows empty state', async () => {
 });
 
 it('shows list error', async () => {
-	mockedList.mockResolvedValue({
-		data: null,
-		error: {},
+	mockedRealtime.mockReturnValue({
+		data: [],
+		loading: false,
+		error: 'No se pudo cargar el listado de proveedores.',
+		refresh: jest.fn(),
 	});
 
 	render(<SuppliersManagement />);
@@ -255,7 +273,7 @@ it('validates invalid email', async () => {
 it('updates a supplier', async () => {
 	const user = userEvent.setup();
 
-	mockedList.mockResolvedValue({
+	mockedRealtime.mockReturnValue({
 		data: [
 			{
 				id: 1,
@@ -269,7 +287,9 @@ it('updates a supplier', async () => {
 				updated_at: '2024-01-01T00:00:00Z',
 			},
 		],
+		loading: false,
 		error: null,
+		refresh: jest.fn(),
 	});
 
 	mockedUpdate.mockResolvedValue({
@@ -311,7 +331,7 @@ it('updates a supplier', async () => {
 it('deletes a supplier', async () => {
 	const user = userEvent.setup();
 
-	mockedList.mockResolvedValue({
+	mockedRealtime.mockReturnValue({
 		data: [
 			{
 				id: 1,
@@ -325,7 +345,9 @@ it('deletes a supplier', async () => {
 				updated_at: '2024-01-01T00:00:00Z',
 			},
 		],
+		loading: false,
 		error: null,
+		refresh: jest.fn(),
 	});
 
 	mockedDelete.mockResolvedValue({
@@ -370,7 +392,7 @@ it('shows translated error when create fails', async () => {
 	await waitFor(() =>
 		expect(toast).toHaveBeenCalledWith(
 			expect.objectContaining({
-				title: 'Error al crear proveedor',
+				title: 'Error al guardar proveedor',
 				description: 'Ya existe un proveedor con ese CUIT',
 				variant: 'destructive',
 			})

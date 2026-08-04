@@ -27,12 +27,26 @@ import { WhatsAppLink } from '@/components/ui/whatsapp-link';
 import { columns } from '@/constants/suppliers/suppliers';
 import { SuppliersForm, emptyForm, type SupplierForm } from './suppliers-form';
 import { toast } from '@/components/ui/use-toast';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
+import { th } from 'date-fns/locale';
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
 export function SuppliersManagement() {
-	const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-	const [loading, setLoading] = useState(true);
+	const {
+		data: suppliers,
+		loading,
+		error,
+		refresh,
+	} = useOptimizedRealtime<Supplier>(
+		'suppliers',
+		async () => {
+			const { data, error } = await listSuppliers();
+			if (error) throw error;
+			return data ?? [];
+		},
+		'suppliers_cache'
+	);
 
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -42,27 +56,6 @@ export function SuppliersManagement() {
 
 	const [deletingId, setDeletingId] = useState<number | null>(null);
 	const [pendingDelete, setPendingDelete] = useState<Supplier | null>(null);
-	const [listError, setListError] = useState<string | null>(null);
-
-	const fetchSuppliers = async () => {
-		try {
-			const { data, error } = await listSuppliers();
-			if (error) {
-				setListError('No se pudo cargar el listado de proveedores.');
-			} else {
-				setListError(null);
-				setSuppliers(data ?? []);
-			}
-		} catch {
-			setListError('No se pudo cargar el listado de proveedores.');
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		void fetchSuppliers();
-	}, []);
 
 	const openCreateForm = () => {
 		setEditingSupplier(null);
@@ -123,42 +116,18 @@ export function SuppliersManagement() {
 
 		try {
 			if (editingSupplier) {
-				const { data, error } = await updateSupplier(editingSupplier.id, payload);
+				const { error } = await updateSupplier(editingSupplier.id, payload);
 				if (error) {
-					toast({
-						title: 'Error al actualizar proveedor',
-						description:
-							translateError(error) || 'No se pudo actualizar el proveedor. Intentá de nuevo.',
-						variant: 'destructive',
-					});
-					return;
-				}
-				if (data) {
-					setSuppliers((prev) =>
-						prev
-							.map((s) => (s.id === data.id ? data : s))
-							.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-					);
+					throw error;
 				}
 				toast({
 					title: 'Proveedor actualizado',
 					description: 'El proveedor se actualizó correctamente.',
 				});
 			} else {
-				const { data, error } = await createSupplier(payload);
+				const { error } = await createSupplier(payload);
 				if (error) {
-					toast({
-						title: 'Error al crear proveedor',
-						description:
-							translateError(error) || 'No se pudo crear el proveedor. Intentá de nuevo.',
-						variant: 'destructive',
-					});
-					return;
-				}
-				if (data) {
-					setSuppliers((prev) =>
-						[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-					);
+					throw error;
 				}
 				toast({
 					title: 'Proveedor creado',
@@ -188,15 +157,12 @@ export function SuppliersManagement() {
 		const supplier = pendingDelete;
 		setPendingDelete(null);
 		setDeletingId(supplier.id);
-		setListError(null);
 
 		try {
 			const { error } = await deleteSupplier(supplier.id);
 			if (error) {
 				throw error;
 			}
-
-			setSuppliers((prev) => prev.filter((s) => s.id !== supplier.id));
 		} catch (error: any) {
 			toast({
 				title: 'Error al eliminar proveedor',
@@ -220,13 +186,15 @@ export function SuppliersManagement() {
 				</button>
 			</div>
 
-			{listError && (
+			{error && (
 				<p role="alert" aria-live="polite" className="mb-4 text-sm text-red-600">
-					{listError}
+					{error}
 				</p>
 			)}
 			{loading ? (
-				<p className="text-sm text-neutral-500">Cargando proveedores…</p>
+				<div className="flex items-center justify-center py-4">
+					<div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+				</div>
 			) : suppliers.length === 0 ? (
 				<p className="text-sm text-neutral-500">Todavía no hay proveedores cargados.</p>
 			) : (
@@ -307,25 +275,27 @@ export function SuppliersManagement() {
 						onCancel={closeForm}
 					/>
 				</DialogContent>
-				<div className="mt-4 flex justify-end gap-2">
-					<DownloadExportButton
-						data={suppliers}
-						columns={columns}
-						fileName="Proveedores"
-						format="pdf"
-						title="Listado de proveedores"
-						className="bg-red-400 hover:bg-red-700"
-					/>
-					<DownloadExportButton
-						data={suppliers}
-						columns={columns}
-						fileName="Proveedores"
-						format="csv"
-						title="Listado de proveedores"
-						sheetName="Proveedores"
-						className="bg-green-600 hover:bg-green-700"
-					/>
-				</div>
+				{!loading && (
+					<div className="mt-4 flex justify-end gap-2">
+						<DownloadExportButton
+							data={suppliers}
+							columns={columns}
+							fileName="Proveedores"
+							format="pdf"
+							title="Listado de proveedores"
+							className="bg-red-400 hover:bg-red-700"
+						/>
+						<DownloadExportButton
+							data={suppliers}
+							columns={columns}
+							fileName="Proveedores"
+							format="csv"
+							title="Listado de proveedores"
+							sheetName="Proveedores"
+							className="bg-green-600 hover:bg-green-700"
+						/>
+					</div>
+				)}
 			</Dialog>
 			<div className="mt-6">
 				<InfoBanner

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
 	Brand,
 	createBrand,
@@ -30,10 +30,23 @@ import {
 import { DownloadExportButton } from '@/components/ui/download-export-button';
 import { columns } from '@/constants/products/brands';
 import { toast } from '@/components/ui/use-toast';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 export function BrandsManagement() {
-	const [brands, setBrands] = useState<Brand[]>([]);
-	const [loading, setLoading] = useState(true);
+	const {
+		data: brands,
+		loading,
+		error,
+		refresh,
+	} = useOptimizedRealtime<Brand>(
+		'brands',
+		async () => {
+			const { data, error } = await listBrands();
+			if (error) throw error;
+			return data ?? [];
+		},
+		'brands_cache'
+	);
 
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
@@ -43,27 +56,6 @@ export function BrandsManagement() {
 
 	const [deletingId, setDeletingId] = useState<number | null>(null);
 	const [pendingDelete, setPendingDelete] = useState<Brand | null>(null);
-	const [listError, setListError] = useState<string | null>(null);
-
-	const fetchBrands = async () => {
-		try {
-			const { data, error } = await listBrands();
-			if (error) {
-				setListError('No se pudo cargar el listado de marcas.');
-			} else {
-				setListError(null);
-				setBrands(data ?? []);
-			}
-		} catch {
-			setListError('No se pudo cargar el listado de marcas.');
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		void fetchBrands();
-	}, []);
 
 	const openCreateForm = () => {
 		setEditingBrand(null);
@@ -98,36 +90,21 @@ export function BrandsManagement() {
 
 		try {
 			if (editingBrand) {
-				const { data, error } = await updateBrand(editingBrand.id, { name: trimmedName });
-				if (error) {
-					throw error;
-				}
-				if (data) {
-					setBrands((prev) =>
-						prev
-							.map((b) => (b.id === data.id ? data : b))
-							.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-					);
-				}
+				const { error } = await updateBrand(editingBrand.id, { name: trimmedName });
+				if (error) throw error;
 				toast({
 					title: 'Marca actualizada',
 					description: 'La marca se actualizó correctamente.',
 				});
 			} else {
-				const { data, error } = await createBrand({ name: trimmedName });
-				if (error) {
-					throw error;
-				}
-				if (data) {
-					setBrands((prev) =>
-						[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-					);
-				}
+				const { error } = await createBrand({ name: trimmedName });
+				if (error) throw error;
 				toast({
 					title: 'Marca creada',
 					description: 'La marca se creó correctamente.',
 				});
 			}
+
 			setIsFormOpen(false);
 			setEditingBrand(null);
 		} catch (error: any) {
@@ -151,15 +128,11 @@ export function BrandsManagement() {
 		const brand = pendingDelete;
 		setPendingDelete(null);
 		setDeletingId(brand.id);
-		setListError(null);
 
 		try {
 			const { error } = await deleteBrand(brand.id);
-			if (error) {
-				throw error;
-			}
+			if (error) throw error;
 
-			setBrands((prev) => prev.filter((b) => b.id !== brand.id));
 			toast({
 				title: 'Marca eliminada',
 				description: 'La marca se eliminó correctamente.',
@@ -187,52 +160,53 @@ export function BrandsManagement() {
 				</button>
 			</div>
 
-			{listError && (
+			{error && (
 				<p role="alert" aria-live="polite" className="mb-4 text-sm text-red-600">
-					{listError}
+					No se pudo cargar el listado de marcas.
 				</p>
 			)}
-			{loading ? (
-				<p className="text-sm text-neutral-500">Cargando marcas…</p>
-			) : brands.length === 0 ? (
-				<p className="text-sm text-neutral-500">Todavía no hay marcas cargadas.</p>
-			) : (
-				<div className="overflow-hidden rounded-md border border-neutral-200 overflow-y-auto max-h-[400px]">
-					<table className="w-full text-left text-sm">
-						<thead className="bg-neutral-50 text-neutral-500">
-							<tr className="divide-x divide-neutral-200">
-								<th className="px-4 py-3 font-medium">Nombre</th>
-								<th className="w-40 px-4 py-3 font-medium text-center">Acciones</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-neutral-200">
-							{brands.map((brand) => (
-								<tr key={brand.id} className="divide-x divide-neutral-200">
-									<td className="px-4 py-3 text-neutral-800">{brand.name}</td>
-									<td className="px-4 py-3 items-center justify-center text-center">
-										<div className="flex gap-3 justify-center">
-											<button
-												onClick={() => openEditForm(brand)}
-												disabled={deletingId === brand.id}
-												className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
-											>
-												Editar
-											</button>
-											<button
-												onClick={() => handleDelete(brand)}
-												disabled={deletingId === brand.id}
-												className="rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
-											>
-												{deletingId === brand.id ? 'Eliminando…' : 'Eliminar'}
-											</button>
-										</div>
-									</td>
+			{!loading &&
+				(brands.length === 0 ? (
+					<p className="text-sm text-neutral-500">Todavía no hay marcas cargadas.</p>
+				) : (
+					<div className="overflow-hidden rounded-md border border-neutral-200 overflow-y-auto max-h-[400px]">
+						<table className="w-full text-left text-sm">
+							<thead className="bg-neutral-50 text-neutral-500">
+								<tr className="divide-x divide-neutral-200">
+									<th className="px-4 py-3 font-medium">Nombre</th>
+									<th className="w-40 px-4 py-3 font-medium text-center">Acciones</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
-				</div>
-			)}
+							</thead>
+							<tbody className="divide-y divide-neutral-200">
+								{[...brands]
+									.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+									.map((brand) => (
+										<tr key={brand.id} className="divide-x divide-neutral-200">
+											<td className="px-4 py-3 text-neutral-800">{brand.name}</td>
+											<td className="px-4 py-3 items-center justify-center text-center">
+												<div className="flex gap-3 justify-center">
+													<button
+														onClick={() => openEditForm(brand)}
+														disabled={deletingId === brand.id}
+														className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
+													>
+														Editar
+													</button>
+													<button
+														onClick={() => handleDelete(brand)}
+														disabled={deletingId === brand.id}
+														className="rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
+													>
+														{deletingId === brand.id ? 'Eliminando…' : 'Eliminar'}
+													</button>
+												</div>
+											</td>
+										</tr>
+									))}
+							</tbody>
+						</table>
+					</div>
+				))}
 
 			<Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
 				<DialogContent className="max-w-sm">
@@ -272,28 +246,34 @@ export function BrandsManagement() {
 						</DialogFooter>
 					</form>
 				</DialogContent>
-				<div className="mt-4 flex justify-end gap-2">
-					<DownloadExportButton
-						data={brands}
-						columns={columns}
-						fileName="Marcas"
-						format="pdf"
-						title="Listado de marcas"
-						subtitle={`Total de marcas: ${brands.length}`}
-						orientation="portrait"
-						className="bg-red-400 hover:bg-red-700"
-						label="Descargar PDF"
-					/>
-					<DownloadExportButton
-						data={brands}
-						columns={columns}
-						fileName="Marcas"
-						format="csv"
-						title="Listado de marcas"
-						subtitle={`Total de marcas: ${brands.length}`}
-						className="bg-green-600 hover:bg-green-700"
-					/>
-				</div>
+				{loading ? (
+					<div className="flex items-center justify-center py-4">
+						<div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+					</div>
+				) : (
+					<div className="mt-4 flex justify-end gap-2">
+						<DownloadExportButton
+							data={brands}
+							columns={columns}
+							fileName="Marcas"
+							format="pdf"
+							title="Listado de marcas"
+							subtitle={`Total de marcas: ${brands.length}`}
+							orientation="portrait"
+							className="bg-red-400 hover:bg-red-700"
+							label="Descargar PDF"
+						/>
+						<DownloadExportButton
+							data={brands}
+							columns={columns}
+							fileName="Marcas"
+							format="csv"
+							title="Listado de marcas"
+							subtitle={`Total de marcas: ${brands.length}`}
+							className="bg-green-600 hover:bg-green-700"
+						/>
+					</div>
+				)}
 			</Dialog>
 			<div className="mt-6">
 				<InfoBanner

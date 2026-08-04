@@ -1,12 +1,17 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrandsManagement } from '@/components/business/products/brands-management';
-import { listBrands, createBrand, updateBrand, deleteBrand } from '@/lib/products/brands/brands';
+import { createBrand, updateBrand, deleteBrand } from '@/lib/products/brands/brands';
 import { translateError } from '@/lib/error-translator';
 import { toast } from '@/components/ui/use-toast';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 jest.mock('@/lib/products/brands/brands');
 jest.mock('@/lib/error-translator');
+
+jest.mock('@/hooks/use-optimized-realtime', () => ({
+	useOptimizedRealtime: jest.fn(),
+}));
 
 jest.mock('@/components/ui/use-toast', () => ({
 	toast: jest.fn(),
@@ -39,24 +44,33 @@ jest.mock('@/components/ui/alert-dialog', () => ({
 	AlertDialogAction: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
 }));
 
-const mockedList = listBrands as jest.Mock;
 const mockedCreate = createBrand as jest.Mock;
 const mockedUpdate = updateBrand as jest.Mock;
 const mockedDelete = deleteBrand as jest.Mock;
 const mockedTranslate = translateError as jest.Mock;
+const mockedRealtime = useOptimizedRealtime as jest.Mock;
 
 beforeEach(() => {
 	jest.clearAllMocks();
 	mockedTranslate.mockReturnValue(null);
+
+	mockedRealtime.mockReturnValue({
+		data: [],
+		loading: false,
+		error: null,
+		refresh: jest.fn(),
+	});
 });
 
 it('loads brands', async () => {
-	mockedList.mockResolvedValue({
+	mockedRealtime.mockReturnValue({
 		data: [
 			{ id: 1, name: 'Apple' },
 			{ id: 2, name: 'Samsung' },
 		],
+		loading: false,
 		error: null,
+		refresh: jest.fn(),
 	});
 
 	render(<BrandsManagement />);
@@ -66,20 +80,17 @@ it('loads brands', async () => {
 });
 
 it('shows empty state', async () => {
-	mockedList.mockResolvedValue({
-		data: [],
-		error: null,
-	});
-
 	render(<BrandsManagement />);
 
 	expect(await screen.findByText(/Todavía no hay marcas cargadas/i)).toBeInTheDocument();
 });
 
 it('shows list error', async () => {
-	mockedList.mockResolvedValue({
-		data: null,
-		error: {},
+	mockedRealtime.mockReturnValue({
+		data: [],
+		loading: false,
+		error: 'No se pudo cargar el listado de marcas.',
+		refresh: jest.fn(),
 	});
 
 	render(<BrandsManagement />);
@@ -89,11 +100,6 @@ it('shows list error', async () => {
 
 it('creates a brand', async () => {
 	const user = userEvent.setup();
-
-	mockedList.mockResolvedValue({
-		data: [],
-		error: null,
-	});
 
 	mockedCreate.mockResolvedValue({
 		data: {
@@ -123,11 +129,6 @@ it('creates a brand', async () => {
 it('validates required name', async () => {
 	const user = userEvent.setup();
 
-	mockedList.mockResolvedValue({
-		data: [],
-		error: null,
-	});
-
 	render(<BrandsManagement />);
 
 	await user.click(screen.getByText(/Nueva marca/i));
@@ -140,9 +141,11 @@ it('validates required name', async () => {
 it('updates a brand', async () => {
 	const user = userEvent.setup();
 
-	mockedList.mockResolvedValue({
+	mockedRealtime.mockReturnValue({
 		data: [{ id: 1, name: 'Apple' }],
+		loading: false,
 		error: null,
+		refresh: jest.fn(),
 	});
 
 	mockedUpdate.mockResolvedValue({
@@ -173,9 +176,11 @@ it('updates a brand', async () => {
 it('deletes a brand', async () => {
 	const user = userEvent.setup();
 
-	mockedList.mockResolvedValue({
+	mockedRealtime.mockReturnValue({
 		data: [{ id: 1, name: 'Apple' }],
+		loading: false,
 		error: null,
+		refresh: jest.fn(),
 	});
 
 	mockedDelete.mockResolvedValue({
@@ -198,11 +203,6 @@ it('shows translated error when create fails', async () => {
 	const user = userEvent.setup();
 
 	mockedTranslate.mockReturnValue('Marca duplicada');
-
-	mockedList.mockResolvedValue({
-		data: [],
-		error: null,
-	});
 
 	mockedCreate.mockResolvedValue({
 		data: null,

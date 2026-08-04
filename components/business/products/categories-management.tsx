@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
 	createCategory,
 	deleteCategory,
@@ -30,10 +30,23 @@ import {
 import { DownloadExportButton } from '@/components/ui/download-export-button';
 import { columns } from '@/constants/products/categories';
 import { toast } from '@/components/ui/use-toast';
+import { useOptimizedRealtime } from '@/hooks/use-optimized-realtime';
 
 export function CategoriesManagement() {
-	const [categories, setCategories] = useState<Category[]>([]);
-	const [loading, setLoading] = useState(true);
+	const {
+		data: categories,
+		loading,
+		error,
+		refresh,
+	} = useOptimizedRealtime<Category>(
+		'categories',
+		async () => {
+			const { data, error } = await listCategories();
+			if (error) throw error;
+			return data ?? [];
+		},
+		'categories_cache'
+	);
 
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -43,27 +56,6 @@ export function CategoriesManagement() {
 
 	const [deletingId, setDeletingId] = useState<number | null>(null);
 	const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
-	const [listError, setListError] = useState<string | null>(null);
-
-	const fetchCategories = async () => {
-		try {
-			const { data, error } = await listCategories();
-			if (error) {
-				setListError('No se pudo cargar el listado de categorías.');
-			} else {
-				setListError(null);
-				setCategories(data ?? []);
-			}
-		} catch {
-			setListError('No se pudo cargar el listado de categorías.');
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		fetchCategories();
-	}, []);
 
 	const openCreateForm = () => {
 		setEditingCategory(null);
@@ -98,36 +90,21 @@ export function CategoriesManagement() {
 
 		try {
 			if (editingCategory) {
-				const { data, error } = await updateCategory(editingCategory.id, { name: trimmedName });
-				if (error) {
-					throw error;
-				}
-				if (data) {
-					setCategories((prev) =>
-						prev
-							.map((c) => (c.id === data.id ? data : c))
-							.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-					);
-				}
+				const { error } = await updateCategory(editingCategory.id, { name: trimmedName });
+				if (error) throw error;
 				toast({
 					title: 'Categoría actualizada',
 					description: 'La categoría se actualizó correctamente.',
 				});
 			} else {
-				const { data, error } = await createCategory({ name: trimmedName });
-				if (error) {
-					throw error;
-				}
-				if (data) {
-					setCategories((prev) =>
-						[...prev, data].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
-					);
-				}
+				const { error } = await createCategory({ name: trimmedName });
+				if (error) throw error;
 				toast({
 					title: 'Categoría creada',
 					description: 'La categoría se creó correctamente.',
 				});
 			}
+
 			setIsFormOpen(false);
 			setEditingCategory(null);
 		} catch (error: any) {
@@ -151,7 +128,6 @@ export function CategoriesManagement() {
 		const category = pendingDelete;
 		setPendingDelete(null);
 		setDeletingId(category.id);
-		setListError(null);
 
 		try {
 			const { error } = await deleteCategory(category.id);
@@ -165,7 +141,6 @@ export function CategoriesManagement() {
 				return;
 			}
 
-			setCategories((prev) => prev.filter((c) => c.id !== category.id));
 			toast({
 				title: 'Categoría eliminada',
 				description: 'La categoría se eliminó correctamente.',
@@ -193,13 +168,15 @@ export function CategoriesManagement() {
 				</button>
 			</div>
 
-			{listError && (
+			{error && (
 				<p role="alert" aria-live="polite" className="mb-4 text-sm text-red-600">
-					{listError}
+					No se pudo cargar el listado de categorías.
 				</p>
 			)}
 			{loading ? (
-				<p className="text-sm text-neutral-500">Cargando categorías…</p>
+				<div className="flex items-center justify-center py-4">
+					<div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+				</div>
 			) : categories.length === 0 ? (
 				<p className="text-sm text-neutral-500">Todavía no hay categorías cargadas.</p>
 			) : (
@@ -212,30 +189,32 @@ export function CategoriesManagement() {
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-neutral-200">
-							{categories.map((category) => (
-								<tr key={category.id} className="divide-x divide-neutral-200">
-									<td className="px-4 py-3 text-neutral-800">{category.name}</td>
-									<td className="px-4 py-3 text-center justify-center items-center">
-										<div className="flex gap-3 justify-center">
-											<button
-												onClick={() => openEditForm(category)}
-												disabled={deletingId === category.id}
-												className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
-											>
-												Editar
-											</button>
+							{[...categories]
+								.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+								.map((category) => (
+									<tr key={category.id} className="divide-x divide-neutral-200">
+										<td className="px-4 py-3 text-neutral-800">{category.name}</td>
+										<td className="px-4 py-3 text-center justify-center items-center">
+											<div className="flex gap-3 justify-center">
+												<button
+													onClick={() => openEditForm(category)}
+													disabled={deletingId === category.id}
+													className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 disabled:opacity-50"
+												>
+													Editar
+												</button>
 
-											<button
-												onClick={() => handleDelete(category)}
-												disabled={deletingId === category.id}
-												className="rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
-											>
-												{deletingId === category.id ? 'Eliminando…' : 'Eliminar'}
-											</button>
-										</div>
-									</td>
-								</tr>
-							))}
+												<button
+													onClick={() => handleDelete(category)}
+													disabled={deletingId === category.id}
+													className="rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
+												>
+													{deletingId === category.id ? 'Eliminando…' : 'Eliminar'}
+												</button>
+											</div>
+										</td>
+									</tr>
+								))}
 						</tbody>
 					</table>
 				</div>
@@ -279,28 +258,30 @@ export function CategoriesManagement() {
 						</DialogFooter>
 					</form>
 				</DialogContent>
-				<div className="mt-4 flex justify-end gap-2">
-					<DownloadExportButton
-						data={categories}
-						columns={columns}
-						fileName="Categorias"
-						format="pdf"
-						title="Listado de categorías"
-						subtitle={`Total de categorías: ${categories.length}`}
-						orientation="portrait"
-						className="bg-red-400 hover:bg-red-700"
-						label="Descargar PDF"
-					/>
-					<DownloadExportButton
-						data={categories}
-						columns={columns}
-						fileName="Categorias"
-						format="csv"
-						title="Listado de categorías"
-						subtitle={`Total de categorías: ${categories.length}`}
-						className="bg-green-600 hover:bg-green-700"
-					/>
-				</div>
+				{!loading && (
+					<div className="mt-4 flex justify-end gap-2">
+						<DownloadExportButton
+							data={categories}
+							columns={columns}
+							fileName="Categorias"
+							format="pdf"
+							title="Listado de categorías"
+							subtitle={`Total de categorías: ${categories.length}`}
+							orientation="portrait"
+							className="bg-red-400 hover:bg-red-700"
+							label="Descargar PDF"
+						/>
+						<DownloadExportButton
+							data={categories}
+							columns={columns}
+							fileName="Categorias"
+							format="csv"
+							title="Listado de categorías"
+							subtitle={`Total de categorías: ${categories.length}`}
+							className="bg-green-600 hover:bg-green-700"
+						/>
+					</div>
+				)}
 			</Dialog>
 			<div className="mt-6">
 				<InfoBanner
