@@ -137,7 +137,8 @@ describe('useOptimizedRealtime', () => {
 
 		renderHook(() => useOptimizedRealtime('clients', fetchFromDb));
 
-		expect(mockChannel).toHaveBeenCalledWith('clients-optimized-realtime');
+		expect(mockChannel).toHaveBeenCalledWith(expect.stringMatching(/^clients-optimized-realtime-/));
+		expect(mockChannel.mock.calls[0][0]).not.toBe('clients-optimized-realtime');
 
 		expect(mockOn).toHaveBeenCalledWith(
 			'postgres_changes',
@@ -150,13 +151,13 @@ describe('useOptimizedRealtime', () => {
 		);
 	});
 
-	it('triggers full fetch on INSERT/UPDATE for balances table', async () => {
+	it('triggers full fetch on INSERT/UPDATE for products table', async () => {
 		const fetchFromDb = jest
 			.fn()
-			.mockResolvedValueOnce([{ id: 1, amount: 100 }])
-			.mockResolvedValue([{ id: 1, amount: 200 }]);
+			.mockResolvedValueOnce([{ id: 1, name: 'Funda' }])
+			.mockResolvedValue([{ id: 1, name: 'Funda Pro' }]);
 
-		renderHook(() => useOptimizedRealtime('balances', fetchFromDb));
+		renderHook(() => useOptimizedRealtime('products', fetchFromDb));
 
 		await waitFor(() => {
 			expect(fetchFromDb).toHaveBeenCalledTimes(1);
@@ -166,36 +167,14 @@ describe('useOptimizedRealtime', () => {
 		await act(async () => {
 			processEvent({
 				eventType: 'UPDATE',
-				new: { id: 1, amount: 150 },
-				old: { id: 1, amount: 100 },
+				new: { id: 1, name: 'Funda Pro' },
+				old: { id: 1, name: 'Funda' },
 			});
 		});
-
-		expect(fetchFromDb).toHaveBeenCalledTimes(2);
-	});
-
-	it('triggers full fetch on INSERT/UPDATE for folder_budgets table', async () => {
-		const fetchFromDb = jest
-			.fn()
-			.mockResolvedValueOnce([{ id: 1, work_id: null }])
-			.mockResolvedValue([{ id: 1, work_id: 5 }]);
-
-		renderHook(() => useOptimizedRealtime('folder_budgets', fetchFromDb));
 
 		await waitFor(() => {
-			expect(fetchFromDb).toHaveBeenCalledTimes(1);
+			expect(fetchFromDb).toHaveBeenCalledTimes(2);
 		});
-
-		const processEvent = mockOn.mock.calls[0][2];
-		await act(async () => {
-			processEvent({
-				eventType: 'UPDATE',
-				new: { id: 1, work_id: 5 },
-				old: { id: 1, work_id: null },
-			});
-		});
-
-		expect(fetchFromDb).toHaveBeenCalledTimes(2);
 	});
 
 	it('does in-place update for other tables on UPDATE event', async () => {

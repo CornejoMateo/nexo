@@ -62,12 +62,12 @@ describe('money utils', () => {
 	});
 
 	describe('normalizeMoney', () => {
-		it('rounds to 3 decimal places', () => {
-			expect(normalizeMoney(10.126)).toBe(10.126);
+		it('rounds to 2 decimal places', () => {
+			expect(normalizeMoney(10.126)).toBe(10.13);
 		});
 
 		it('rounds down correctly', () => {
-			expect(normalizeMoney(10.124)).toBe(10.124);
+			expect(normalizeMoney(10.124)).toBe(10.12);
 		});
 
 		it('handles floating point precision issues', () => {
