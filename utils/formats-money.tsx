@@ -6,7 +6,7 @@ export const formatCurrency = (amount: number | null | undefined) => {
 		style: 'currency',
 		currency: 'ARS',
 		minimumFractionDigits: 0,
-		maximumFractionDigits: 3,
+		maximumFractionDigits: 2,
 	}).format(amount);
 };
 
@@ -17,7 +17,7 @@ export const formatCurrencyWithoutSymbol = (amount: number | null | undefined) =
 	return new Intl.NumberFormat('es-AR', {
 		style: 'decimal',
 		minimumFractionDigits: 0,
-		maximumFractionDigits: 3,
+		maximumFractionDigits: 2,
 	}).format(amount);
 };
 
@@ -28,13 +28,13 @@ export const formatCurrencyUSD = (amount: number | null | undefined) => {
 		style: 'currency',
 		currency: 'USD',
 		minimumFractionDigits: 0,
-		maximumFractionDigits: 3,
+		maximumFractionDigits: 2,
 	}).format(amount);
 };
 
-// Normalizes a number to have at most 3 decimal places, and avoids -0
+// Normalizes a number to have at most 2 decimal places, and avoids -0
 export const normalizeMoney = (value: number): number => {
-	const rounded = Math.round((value + Number.EPSILON) * 1000) / 1000;
+	const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
 	return Object.is(rounded, -0) ? 0 : rounded;
 };
 
