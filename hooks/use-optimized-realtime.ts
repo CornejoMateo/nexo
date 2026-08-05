@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase-client';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useId } from 'react';
 
 interface CacheEntry<T> {
 	data: T[];
@@ -22,6 +22,7 @@ export function useOptimizedRealtime<T extends { id: number }>(
 	const fetchFromDbRef = useRef(fetchFromDb);
 
 	const cacheKeyFinal = cacheKey || `realtime_${table}`;
+	const channelId = useId().replace(/[^a-zA-Z0-9]/g, '');
 	const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 	const versionRef = useRef(0);
 
@@ -121,10 +122,7 @@ export function useOptimizedRealtime<T extends { id: number }>(
 
 			// For tables that require joined relational data, do a full refresh on INSERT/UPDATE
 			// to avoid incomplete realtime payloads without nested relations.
-			if (
-				(table === 'balances' || table === 'folder_budgets') &&
-				(eventType === 'INSERT' || eventType === 'UPDATE')
-			) {
+			if (table === 'products' && (eventType === 'INSERT' || eventType === 'UPDATE')) {
 				fetchData(true);
 				return;
 			}
@@ -181,7 +179,7 @@ export function useOptimizedRealtime<T extends { id: number }>(
 	useEffect(() => {
 		if (!table) return;
 		const channel = supabase
-			.channel(`${table}-optimized-realtime`)
+			.channel(`${table}-optimized-realtime-${channelId}`)
 			.on(
 				'postgres_changes',
 				{
@@ -199,7 +197,7 @@ export function useOptimizedRealtime<T extends { id: number }>(
 			}
 			supabase.removeChannel(channel);
 		};
-	}, [table, processRealtimeEvent]);
+	}, [table, processRealtimeEvent, channelId]);
 
 	// Clean expired cache periodically
 	useEffect(() => {
