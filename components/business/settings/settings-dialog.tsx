@@ -34,6 +34,7 @@ import { useAuth } from '@/components/provider/auth-provider';
 import { UsersTable } from '../users/users-table';
 import { UsersDialogForm } from '../users/users-dialog-form';
 import { CompanySettingsForm } from './company-settings-form';
+import { Info } from 'lucide-react';
 
 interface SettingsDialogProps {
 	open: boolean;
@@ -293,10 +294,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 									</button>
 								</div>
 
-								<p className="text-xs text-muted-foreground">
-									Un usuario no puede editar sus propios datos
-								</p>
-
 								<div className="rounded-lg border bg-background">
 									<UsersTable
 										users={users}
@@ -308,6 +305,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 										onUpdateRole={handleUpdateRole}
 									/>
 								</div>
+								<p className="text-xs text-muted-foreground">
+									<Info className="inline-block h-3 w-3 mr-1" />
+									Un usuario no puede editar sus propios datos
+								</p>
 							</div>
 						) : (
 							<div className="space-y-4">
