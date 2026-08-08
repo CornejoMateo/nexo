@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { UsersDialog } from '@/components/business/users/users-dialog';
+import userEvent from '@testing-library/user-event';
+import { SettingsDialog } from '@/components/business/settings/settings-dialog';
 import {
 	listUsers,
 	createUser,
@@ -7,8 +8,10 @@ import {
 	updateUser,
 	updateUserPassword,
 } from '@/lib/users/users';
+import { updateBusinessSettings } from '@/lib/settings/business-settings';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/provider/auth-provider';
+import { useSettings } from '@/components/provider/settings-provider';
 
 jest.mock('@/lib/users/users', () => ({
 	listUsers: jest.fn(),
@@ -18,12 +21,23 @@ jest.mock('@/lib/users/users', () => ({
 	updateUserPassword: jest.fn(),
 }));
 
+jest.mock('@/lib/settings/business-settings', () => ({
+	updateBusinessSettings: jest.fn(),
+}));
+
+const mockToast = jest.fn();
+
 jest.mock('@/components/ui/use-toast', () => ({
-	useToast: jest.fn(),
+	useToast: jest.fn(() => ({ toast: mockToast })),
+	toast: (...args: any[]) => mockToast(...args),
 }));
 
 jest.mock('@/components/provider/auth-provider', () => ({
 	useAuth: jest.fn(),
+}));
+
+jest.mock('@/components/provider/settings-provider', () => ({
+	useSettings: jest.fn(),
 }));
 
 jest.mock('@/lib/error-translator', () => ({
@@ -98,24 +112,34 @@ jest.mock('@/components/ui/select', () => ({
 	SelectValue: () => null,
 }));
 
-function setup(users: any[] = []) {
+function setup(users: any[] = [], settings: any = null) {
 	(listUsers as jest.Mock).mockResolvedValue({ data: users, error: null });
 	(useAuth as jest.Mock).mockReturnValue({
 		user: { username: 'admin1', role: 'Admin', name: 'Admin', last_name: 'User' },
 	});
-	render(<UsersDialog open onOpenChange={jest.fn()} />);
+	(useSettings as jest.Mock).mockReturnValue({
+		settings: settings ?? {
+			id: 1,
+			updated_at: '2024-01-01T00:00:00Z',
+			usd_rate: 1000,
+			address: null,
+			number_phone: null,
+		},
+		loading: false,
+		error: null,
+		refreshSettings: jest.fn(),
+	});
+	render(<SettingsDialog open onOpenChange={jest.fn()} />);
 	return {
 		waitForUsers: () =>
-			waitFor(() => expect(screen.getByText('Configurar usuarios')).toBeInTheDocument()),
+			waitFor(() => expect(screen.getByText('Configuración')).toBeInTheDocument()),
 	};
 }
 
-describe('UsersDialog', () => {
-	const toast = jest.fn();
-
+describe('SettingsDialog', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
-		(useToast as jest.Mock).mockReturnValue({ toast });
+		(useToast as jest.Mock).mockReturnValue({ toast: mockToast });
 	});
 
 	it('loads and displays users on open', async () => {
@@ -165,7 +189,7 @@ describe('UsersDialog', () => {
 				last_name: 'Pérez',
 			});
 		});
-		expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Usuario creado' }));
+		expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Usuario creado' }));
 	});
 
 	it('updates user role', async () => {
@@ -179,7 +203,7 @@ describe('UsersDialog', () => {
 		await waitFor(() => {
 			expect(updateUser).toHaveBeenCalledWith('1', { role: 'Admin' });
 		});
-		expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Rol actualizado' }));
+		expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Rol actualizado' }));
 	});
 
 	it('deletes a user', async () => {
@@ -195,7 +219,7 @@ describe('UsersDialog', () => {
 		await waitFor(() => {
 			expect(deleteUser).toHaveBeenCalledWith('1');
 		});
-		expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Usuario eliminado' }));
+		expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Usuario eliminado' }));
 	});
 
 	it('shows edit form when clicking Editar button', async () => {
@@ -231,7 +255,9 @@ describe('UsersDialog', () => {
 			});
 		});
 		expect(updateUserPassword).not.toHaveBeenCalled();
-		expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Usuario actualizado' }));
+		expect(mockToast).toHaveBeenCalledWith(
+			expect.objectContaining({ title: 'Usuario actualizado' })
+		);
 	});
 
 	it('edits user and changes password', async () => {
@@ -255,6 +281,60 @@ describe('UsersDialog', () => {
 			});
 		});
 		expect(updateUserPassword).toHaveBeenCalledWith('1', 'newpass123');
-		expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Usuario actualizado' }));
+		expect(mockToast).toHaveBeenCalledWith(
+			expect.objectContaining({ title: 'Usuario actualizado' })
+		);
+	});
+
+	it('shows the company form prefilled with business settings data', async () => {
+		const user = userEvent.setup();
+		setup([], {
+			id: 1,
+			updated_at: '2024-01-01T00:00:00Z',
+			usd_rate: 1000,
+			address: 'Av. Siempre Viva 123',
+			number_phone: '11 5555 1234',
+		});
+
+		await user.click(screen.getByRole('tab', { name: /Empresa/i }));
+
+		expect(screen.getByDisplayValue('Av. Siempre Viva 123')).toBeInTheDocument();
+		expect(screen.getByDisplayValue('11 5555 1234')).toBeInTheDocument();
+	});
+
+	it('saves company settings', async () => {
+		const user = userEvent.setup();
+		setup();
+		(updateBusinessSettings as jest.Mock).mockResolvedValue({ data: null, error: null });
+		const refreshSettings = jest.fn();
+		(useSettings as jest.Mock).mockReturnValue({
+			settings: {
+				id: 1,
+				updated_at: '2024-01-01T00:00:00Z',
+				usd_rate: 1000,
+				address: null,
+				number_phone: null,
+			},
+			loading: false,
+			error: null,
+			refreshSettings,
+		});
+
+		await user.click(screen.getByRole('tab', { name: /Empresa/i }));
+
+		await user.type(screen.getByLabelText('Dirección'), 'Av. Corrientes 500');
+		await user.type(screen.getByLabelText('Teléfono'), '11 2222 3333');
+		await user.click(screen.getByText('Guardar cambios'));
+
+		await waitFor(() => {
+			expect(updateBusinessSettings).toHaveBeenCalledWith({
+				address: 'Av. Corrientes 500',
+				number_phone: '11 2222 3333',
+			});
+		});
+		expect(refreshSettings).toHaveBeenCalled();
+		expect(mockToast).toHaveBeenCalledWith(
+			expect.objectContaining({ title: 'Empresa actualizada' })
+		);
 	});
 });

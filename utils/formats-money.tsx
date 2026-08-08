@@ -1,7 +1,7 @@
 // This method is used to format the numerical values retrieved
 // from the database so that they are displayed in the Argentine format.
 export const formatCurrency = (amount: number | null | undefined) => {
-	if (!amount) return '$0.00';
+	if (!amount) return '-';
 	return new Intl.NumberFormat('es-AR', {
 		style: 'currency',
 		currency: 'ARS',
@@ -18,6 +18,15 @@ export const formatCurrencyWithoutSymbol = (amount: number | null | undefined) =
 		style: 'decimal',
 		minimumFractionDigits: 0,
 		maximumFractionDigits: 2,
+	}).format(amount);
+};
+
+export const formatInteger = (amount: number | null | undefined) => {
+	if (!amount) return '0';
+	return new Intl.NumberFormat('es-AR', {
+		style: 'decimal',
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 0,
 	}).format(amount);
 };
 
