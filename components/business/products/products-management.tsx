@@ -2,8 +2,8 @@
 
 import { useId, useState, type ReactNode } from 'react';
 import { sections, ProductSection } from '@/constants/products/products';
-import { BrandsManagement } from '@/components/business/products/brands-management';
-import { CategoriesManagement } from '@/components/business/products/categories-management';
+import { BrandsManagement } from '@/components/business/products/brands/brands-management';
+import { CategoriesManagement } from '@/components/business/products/categories/categories-management';
 import { Products } from '@/components/business/products/products';
 import { ImagesProductsManagement } from '@/components/business/products/images-products-management';
 

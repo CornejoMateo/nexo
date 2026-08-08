@@ -43,8 +43,8 @@ import { columns } from '@/constants/products/products';
 import type { CurrencyFilter, StockFilter } from '@/constants/products/products';
 import { ProductsForm, emptyForm, type PriceCurrency, type ProductForm } from './products-form';
 import { ProductsTable } from './products-table';
-import { ProductDetailDialog } from './product-detail-dialog';
-import { RestockDialog } from './restock-dialog';
+import { ProductDetailDialog } from '@/components/business/products/product-details/product-detail-dialog';
+import { RestockDialog } from '@/components/business/products/stock/restock-dialog';
 import { toast } from '@/components/ui/use-toast';
 import {
 	formatCurrencyWithoutSymbol,

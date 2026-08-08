@@ -4,8 +4,8 @@ import { useEffect, useRef } from 'react';
 import { useSettings } from '@/components/provider/settings-provider';
 import { formatCurrencyWithoutSymbol, formatNumber, parseArsToNumber } from '@/utils/formats-money';
 import { generateEan13 } from '@/lib/products/barcodes/barcode-utils';
-import { BarcodeGenerator } from './barcode-generator';
-import type { ProductForm } from './products-form';
+import { BarcodeGenerator } from '@/components/business/products/barcode-generator';
+import type { ProductForm } from '@/components/business/products/products-form';
 
 interface SupplierProductFormProps {
 	form: ProductForm;

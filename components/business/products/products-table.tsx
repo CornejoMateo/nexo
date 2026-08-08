@@ -123,12 +123,12 @@ export function ProductsTable({
 					/>
 				</div>
 
-				<div className="flex items-center gap-2">
+				<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
 					<Select
 						value={stockFilter}
 						onValueChange={(value) => onStockFilterChange(value as StockFilter)}
 					>
-						<SelectTrigger aria-label="Filtrar por stock" className="w-[150px]">
+						<SelectTrigger aria-label="Filtrar por stock" className="w-full sm:w-[150px]">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
@@ -144,7 +144,7 @@ export function ProductsTable({
 						value={currencyFilter}
 						onValueChange={(value) => onCurrencyFilterChange(value as CurrencyFilter)}
 					>
-						<SelectTrigger aria-label="Filtrar por moneda" className="w-[130px]">
+						<SelectTrigger aria-label="Filtrar por moneda" className="w-full sm:w-[130px]">
 							<SelectValue>
 								{currencyFilter === 'all'
 									? 'Moneda'
@@ -162,7 +162,7 @@ export function ProductsTable({
 
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="outline" size="sm" className="gap-2">
+							<Button variant="outline" size="sm" className="w-full gap-2 sm:w-auto">
 								<Columns3 className="h-4 w-4" />
 								Columnas
 							</Button>

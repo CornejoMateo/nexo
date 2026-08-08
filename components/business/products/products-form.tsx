@@ -5,7 +5,7 @@ import { Brand } from '@/lib/products/brands/brands';
 import { Category } from '@/lib/products/categories/categories';
 import { Supplier } from '@/lib/suppliers/suppliers';
 import { formatNumber } from '@/utils/formats-money';
-import { SupplierProductForm } from './supplier-product-form';
+import { SupplierProductForm } from '@/components/business/products/supplier-products/supplier-product-form';
 
 export type PriceCurrency = 'usd' | 'ars' | 'both';
 
