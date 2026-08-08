@@ -29,7 +29,6 @@ interface UsersTableProps {
 	isCurrentUser: (user: User) => boolean;
 	onEdit: (user: User) => void;
 	onDelete: (user: User) => void;
-	onAdd: () => void;
 	onUpdateRole: (user: User, newRole: string) => Promise<void>;
 }
 
@@ -40,18 +39,10 @@ export function UsersTable({
 	isCurrentUser,
 	onEdit,
 	onDelete,
-	onAdd,
 	onUpdateRole,
 }: UsersTableProps) {
 	return (
 		<div className="space-y-4">
-			<div className="flex justify-end">
-				<Button onClick={onAdd} className="gap-2">
-					<Plus className="h-4 w-4" />
-					Agregar usuario
-				</Button>
-			</div>
-
 			{loading ? (
 				<p className="text-center text-muted-foreground py-8">Cargando usuarios...</p>
 			) : users.length === 0 ? (

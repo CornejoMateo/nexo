@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
@@ -16,6 +17,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { translateError } from '@/lib/error-translator';
@@ -29,15 +31,16 @@ import {
 } from '@/lib/users/users';
 import { UserRole } from '@/constants/users/user-role';
 import { useAuth } from '@/components/provider/auth-provider';
-import { UsersTable } from './users-table';
-import { UsersDialogForm } from './users-dialog-form';
+import { UsersTable } from '../users/users-table';
+import { UsersDialogForm } from '../users/users-dialog-form';
+import { CompanySettingsForm } from './company-settings-form';
 
-interface UsersDialogProps {
+interface SettingsDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
 
-export function UsersDialog({ open, onOpenChange }: UsersDialogProps) {
+export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 	const { toast } = useToast();
 	const [users, setUsers] = useState<User[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -68,6 +71,7 @@ export function UsersDialog({ open, onOpenChange }: UsersDialogProps) {
 					description: translateError(error) || 'Ocurrió un error al cargar los usuarios',
 					variant: 'destructive',
 				});
+				return;
 			} else {
 				setUsers(data ?? []);
 			}
@@ -138,7 +142,7 @@ export function UsersDialog({ open, onOpenChange }: UsersDialogProps) {
 				if (pwError) {
 					toast({
 						title: 'Error al actualizar contraseña',
-						description: translateError(pwError),
+						description: translateError(pwError) || 'Ocurrió un error al actualizar la contraseña',
 						variant: 'destructive',
 					});
 					setSaving(false);
@@ -168,7 +172,7 @@ export function UsersDialog({ open, onOpenChange }: UsersDialogProps) {
 			if (error) {
 				toast({
 					title: 'Error al crear usuario',
-					description: translateError(error),
+					description: translateError(error) || 'Ocurrió un error al crear el usuario',
 					variant: 'destructive',
 				});
 				setSaving(false);
@@ -196,7 +200,7 @@ export function UsersDialog({ open, onOpenChange }: UsersDialogProps) {
 		if (error) {
 			toast({
 				title: 'Error al actualizar rol',
-				description: translateError(error),
+				description: translateError(error) || 'Ocurrió un error al actualizar el rol',
 				variant: 'destructive',
 			});
 		} else {
@@ -226,9 +230,10 @@ export function UsersDialog({ open, onOpenChange }: UsersDialogProps) {
 		if (error) {
 			toast({
 				title: 'Error al eliminar usuario',
-				description: translateError(error),
+				description: translateError(error) || 'Ocurrió un error al eliminar el usuario',
 				variant: 'destructive',
 			});
+			return;
 		} else {
 			toast({
 				title: 'Usuario eliminado',
@@ -238,49 +243,117 @@ export function UsersDialog({ open, onOpenChange }: UsersDialogProps) {
 		}
 	};
 
+	const cancelForm = () => {
+		setShowForm(false);
+		setEditingUser(null);
+		setFormData({ username: '', password: '', role: '', name: '', last_name: '' });
+	};
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-card !max-w-3xl max-h-[80vh] overflow-y-auto">
+			<DialogContent
+				showCloseButton={false}
+				className="bg-card !max-w-3xl max-h-[80vh] overflow-y-auto"
+			>
 				<DialogHeader>
-					<DialogTitle className="text-foreground">
-						{showForm ? (editingUser ? 'Editar usuario' : 'Nuevo usuario') : 'Configurar usuarios'}
-					</DialogTitle>
+					<DialogTitle className="text-foreground">Configuración</DialogTitle>
 					<DialogDescription className="text-muted-foreground">
-						{showForm
-							? editingUser
-								? 'Actualizá los datos del usuario'
-								: 'Completá los datos del nuevo usuario'
-							: 'Administrá los usuarios del sistema'}
+						Administrá los datos de la empresa y de los usuarios del sistema
 					</DialogDescription>
 				</DialogHeader>
 
-				{!showForm ? (
-					<UsersTable
-						users={users}
-						loading={loading}
-						currentUser={currentUser}
-						isCurrentUser={isCurrentUser}
-						onEdit={handleEdit}
-						onDelete={(user) => setUserToDelete(user)}
-						onAdd={() => setShowForm(true)}
-						onUpdateRole={handleUpdateRole}
-					/>
-				) : (
-					<UsersDialogForm
-						editingUser={editingUser}
-						formData={formData}
-						setFormData={setFormData}
-						saving={saving}
-						showPassword={showPassword}
-						setShowPassword={setShowPassword}
-						handleSave={handleSave}
-						onCancel={() => {
-							setShowForm(false);
-							setEditingUser(null);
-							setFormData({ username: '', password: '', role: '', name: '', last_name: '' });
-						}}
-					/>
-				)}
+				<Tabs defaultValue="users" className="w-full">
+					<TabsList>
+						<TabsTrigger value="business">Empresa</TabsTrigger>
+						<TabsTrigger value="users">Usuarios</TabsTrigger>
+					</TabsList>
+
+					<TabsContent value="business">
+						<CompanySettingsForm />
+					</TabsContent>
+
+					<TabsContent value="users" className="mt-4">
+						{!showForm ? (
+							<div className="space-y-4">
+								{/* Header */}
+								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+									<div>
+										<h2 className="text-lg font-semibold text-foreground">Usuarios</h2>
+										<p className="text-sm text-muted-foreground">
+											Gestioná los usuarios y sus permisos de acceso.
+										</p>
+									</div>
+
+									<button
+										type="button"
+										onClick={() => setShowForm(true)}
+										className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-700 sm:w-auto"
+									>
+										+ Nuevo usuario
+									</button>
+								</div>
+
+								<p className="text-xs text-muted-foreground">
+									Un usuario no puede editar sus propios datos
+								</p>
+
+								<div className="rounded-lg border bg-background">
+									<UsersTable
+										users={users}
+										loading={loading}
+										currentUser={currentUser}
+										isCurrentUser={isCurrentUser}
+										onEdit={handleEdit}
+										onDelete={(user) => setUserToDelete(user)}
+										onUpdateRole={handleUpdateRole}
+									/>
+								</div>
+							</div>
+						) : (
+							<div className="space-y-4">
+								<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+									<div>
+										<h2 className="text-lg font-semibold text-foreground">
+											{editingUser ? 'Editar usuario' : 'Nuevo usuario'}
+										</h2>
+										<p className="text-sm text-muted-foreground">
+											{editingUser
+												? 'Modificá la información y los permisos del usuario.'
+												: 'Completá los datos para crear un nuevo usuario.'}
+										</p>
+									</div>
+
+									<button
+										type="button"
+										onClick={cancelForm}
+										className="w-full rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 sm:w-auto"
+									>
+										Volver
+									</button>
+								</div>
+
+								<div className="rounded-lg border bg-background p-4 sm:p-6">
+									<UsersDialogForm
+										editingUser={editingUser}
+										formData={formData}
+										setFormData={setFormData}
+										saving={saving}
+										showPassword={showPassword}
+										setShowPassword={setShowPassword}
+										handleSave={handleSave}
+										onCancel={cancelForm}
+									/>
+								</div>
+							</div>
+						)}
+					</TabsContent>
+				</Tabs>
+
+				<div className="flex justify-end">
+					<DialogClose asChild>
+						<Button variant="outline">Cerrar</Button>
+					</DialogClose>
+				</div>
 			</DialogContent>
 			<AlertDialog open={!!userToDelete} onOpenChange={(o) => !o && setUserToDelete(null)}>
 				<AlertDialogContent>
