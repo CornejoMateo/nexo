@@ -9,21 +9,15 @@ import Image from 'next/image';
 import {
 	LayoutDashboard,
 	Package,
-	Users,
-	FileText,
-	ClipboardCheck,
-	Calendar,
-	BarChart3,
 	ChevronLeft,
 	ChevronRight,
 	X,
 	Lock,
-	AlertCircle,
 	DollarSign,
 	Settings,
-	LayoutList,
 	Trash2,
 	Van,
+	Wallet,
 } from 'lucide-react';
 import { clearCache } from '@/utils/cache';
 
@@ -52,6 +46,7 @@ const navigation = [
 	{ name: 'Productos', href: '/products', icon: Package, disabled: false },
 	{ name: 'Ventas', href: '/sales', icon: DollarSign, disabled: false },
 	{ name: 'Proveedores', href: '/suppliers', icon: Van, disabled: false },
+	{ name: 'Consumos Internos', href: '/internal-consumptions', icon: Wallet, disabled: false },
 ] as const;
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -67,7 +62,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
 	const allowedByRole = useMemo(() => {
 		return {
-			Admin: ['Panel', 'Productos', 'Ventas', 'Proveedores'],
+			Admin: ['Panel', 'Productos', 'Ventas', 'Proveedores', 'Consumos Internos'],
 		} as Record<UserRole, string[]>;
 	}, []);
 

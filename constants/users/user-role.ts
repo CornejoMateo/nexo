@@ -1,3 +1,3 @@
-export type UserRole = 'Taller' | 'Admin';
+export type UserRole = 'Admin';
 
-export const roles: UserRole[] = ['Taller', 'Admin']; // Used for selects
+export const roles: UserRole[] = ['Admin']; // Used for selects
