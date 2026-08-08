@@ -22,16 +22,16 @@ describe('money utils', () => {
 			expect(result).toContain('$');
 		});
 
-		it('returns $0.00 for null', () => {
-			expect(formatCurrency(null)).toBe('$0.00');
+		it('returns "-" for null', () => {
+			expect(formatCurrency(null)).toBe('-');
 		});
 
-		it('returns $0.00 for undefined', () => {
-			expect(formatCurrency(undefined)).toBe('$0.00');
+		it('returns "-" for undefined', () => {
+			expect(formatCurrency(undefined)).toBe('-');
 		});
 
-		it('returns $0.00 for zero', () => {
-			expect(formatCurrency(0)).toBe('$0.00');
+		it('returns "-" for zero', () => {
+			expect(formatCurrency(0)).toBe('-');
 		});
 
 		it('formats negative values correctly', () => {

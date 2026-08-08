@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { CategoriesManagement } from '@/components/business/products/categories-management';
+import { CategoriesManagement } from '@/components/business/products/categories/categories-management';
 import {
 	createCategory,
 	updateCategory,

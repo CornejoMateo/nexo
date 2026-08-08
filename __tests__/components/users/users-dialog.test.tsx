@@ -59,6 +59,7 @@ jest.mock('@/components/ui/dialog', () => ({
 	DialogTitle: ({ children }: any) => <h2>{children}</h2>,
 	DialogDescription: ({ children }: any) => <p>{children}</p>,
 	DialogFooter: ({ children }: any) => <div>{children}</div>,
+	DialogClose: ({ children }: any) => <>{children}</>,
 }));
 
 jest.mock('@/components/ui/alert-dialog', () => ({
@@ -154,11 +155,11 @@ describe('SettingsDialog', () => {
 		expect(screen.getByText('taller1')).toBeInTheDocument();
 	});
 
-	it('shows create user form when clicking Agregar usuario', async () => {
+	it('shows create user form when clicking Nuevo usuario', async () => {
 		setup();
-		await screen.findByText('Agregar usuario');
+		await screen.findByText('+ Nuevo usuario');
 
-		fireEvent.click(screen.getByText('Agregar usuario'));
+		fireEvent.click(screen.getByText('+ Nuevo usuario'));
 
 		expect(screen.getByLabelText('Nombre de usuario')).toBeInTheDocument();
 		expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
@@ -170,7 +171,7 @@ describe('SettingsDialog', () => {
 		setup();
 		(createUser as jest.Mock).mockResolvedValue({ data: { success: true }, error: null });
 
-		fireEvent.click(await screen.findByText('Agregar usuario'));
+		fireEvent.click(await screen.findByText('+ Nuevo usuario'));
 		fireEvent.change(screen.getByLabelText('Nombre de usuario'), {
 			target: { value: 'nuevouser' },
 		});

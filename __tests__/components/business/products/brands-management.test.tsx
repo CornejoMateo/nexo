@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrandsManagement } from '@/components/business/products/brands-management';
+import { BrandsManagement } from '@/components/business/products/brands/brands-management';
 import { createBrand, updateBrand, deleteBrand } from '@/lib/products/brands/brands';
 import { translateError } from '@/lib/error-translator';
 import { toast } from '@/components/ui/use-toast';
