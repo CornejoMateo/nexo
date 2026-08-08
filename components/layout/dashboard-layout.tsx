@@ -39,10 +39,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/provider/auth-provider';
+import { useSettings } from '@/components/provider/settings-provider';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { cn } from '@/lib/utils';
+import { formatCurrencyUSD } from '@/utils/formats-money';
 import type { UserRole } from '@/constants/users/user-role';
-import { UsersDialog } from '@/components/business/users/users-dialog';
+import { SettingsDialog } from '@/components/business/settings/settings-dialog';
+import { DollarSettingsDialog } from '@/components/ui/dollar-settings-dialog';
 
 const navigation = [
 	{ name: 'Panel', href: '/', icon: LayoutDashboard, disabled: false },
@@ -54,11 +57,13 @@ const navigation = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-	const [usersDialogOpen, setUsersDialogOpen] = useState(false);
+	const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 	const [cacheDialogOpen, setCacheDialogOpen] = useState(false);
+	const [dollarDialogOpen, setDollarDialogOpen] = useState(false);
 	const pathname = usePathname() || '/';
 	const router = useRouter();
 	const { user, loading, signOutUser } = useAuth();
+	const { settings, loading: settingsLoading } = useSettings();
 
 	const allowedByRole = useMemo(() => {
 		return {
@@ -202,16 +207,36 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 						})}
 					</nav>
 
+					<div className="px-3 pb-3">
+						<button
+							type="button"
+							onClick={() => setDollarDialogOpen(true)}
+							className="flex w-full items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-secondary"
+						>
+							<span className="flex items-center gap-2 text-sm text-muted-foreground">
+								<DollarSign className="h-4 w-4" />
+								Dólar
+							</span>
+							<span className="text-sm font-medium text-foreground">
+								{settingsLoading
+									? '…'
+									: settings?.usd_rate != null
+										? formatCurrencyUSD(settings.usd_rate)
+										: '—'}
+							</span>
+						</button>
+					</div>
+
 					<div className="px-3">
 						{user?.role === 'Admin' && (
 							<Button
 								variant="ghost"
 								size="sm"
-								className="w-full justify-start gap-2 mb-2 text-muted-foreground hover:text-foreground"
-								onClick={() => setUsersDialogOpen(true)}
+								className="w-full justify-start gap-2 mb-2 text-muted-foreground hover:text-foreground hover:bg-secondary"
+								onClick={() => setSettingsDialogOpen(true)}
 							>
 								<Settings className="h-4 w-4" />
-								Configurar usuarios
+								Configuración
 							</Button>
 						)}
 					</div>
@@ -247,7 +272,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 				</div>
 			</aside>
 
-			<UsersDialog open={usersDialogOpen} onOpenChange={setUsersDialogOpen} />
+			<SettingsDialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen} />
+			<DollarSettingsDialog open={dollarDialogOpen} onOpenChange={setDollarDialogOpen} />
 
 			<div className={cn('transition-all duration-200', sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-64')}>
 				{' '}
