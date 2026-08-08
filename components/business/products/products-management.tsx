@@ -5,11 +5,9 @@ import { sections, ProductSection } from '@/constants/products/products';
 import { BrandsManagement } from '@/components/business/products/brands-management';
 import { CategoriesManagement } from '@/components/business/products/categories-management';
 import { Products } from '@/components/business/products/products';
-import { StockManagement } from '@/components/business/products/stock-management';
 import { ImagesProductsManagement } from '@/components/business/products/images-products-management';
 
 type ProductsManagementProps = {
-	stock?: ReactNode;
 	products?: ReactNode;
 	gallery?: ReactNode;
 	categories?: ReactNode;
@@ -18,8 +16,7 @@ type ProductsManagementProps = {
 };
 
 export function ProductsManagement({
-	defaultSection = 'stock',
-	stock,
+	defaultSection = 'products',
 	products,
 	gallery,
 	categories,
@@ -32,7 +29,6 @@ export function ProductsManagement({
 	const tabListId = useId();
 
 	const panelContent: Record<ProductSection, ReactNode> = {
-		stock: stock ?? <StockManagement />,
 		products: products ?? <Products />,
 		gallery: gallery ?? <ImagesProductsManagement />,
 		categories: categories ?? <CategoriesManagement />,
